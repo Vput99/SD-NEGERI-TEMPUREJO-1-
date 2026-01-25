@@ -5,14 +5,14 @@ export interface NavItem {
 }
 
 export interface Teacher {
-  id: number;
+  id: string | number;
   name: string;
   role: string;
   image: string;
 }
 
 export interface NewsItem {
-  id: number;
+  id: string | number;
   title: string;
   date: string;
   category: string;
@@ -41,7 +41,7 @@ export interface ChatMessage {
 }
 
 export interface GalleryImage {
-  id: number;
+  id: string | number;
   src: string;
   caption: string;
   category: 'Ekstrakurikuler' | 'Akademik' | 'Fasilitas';

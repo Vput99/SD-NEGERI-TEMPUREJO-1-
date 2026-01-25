@@ -1,5 +1,8 @@
+
 import React, { useState } from 'react';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, ScheduleItem, SchoolProfile } from '../types';
+import { db } from '../services/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc, getDocs } from 'firebase/firestore';
 
 interface AdminDashboardProps {
     isOpen: boolean;
@@ -32,6 +35,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+    const [isSaving, setIsSaving] = useState(false);
 
     // --- State for Forms ---
     const [isEditing, setIsEditing] = useState(false);
@@ -40,9 +44,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [identityForm, setIdentityForm] = useState<SchoolProfile>(schoolProfile);
 
     // Generic holders for editing
-    const [currentNews, setCurrentNews] = useState<Partial<NewsItem>>({});
-    const [currentTeacher, setCurrentTeacher] = useState<Partial<Teacher>>({});
-    const [currentGallery, setCurrentGallery] = useState<Partial<GalleryImage>>({});
+    // Note: ID in Firebase is string, but types.ts says number. 
+    // We cast strictly here.
+    const [currentNews, setCurrentNews] = useState<Partial<NewsItem> & { id?: string }>({});
+    const [currentTeacher, setCurrentTeacher] = useState<Partial<Teacher> & { id?: string }>({});
+    const [currentGallery, setCurrentGallery] = useState<Partial<GalleryImage> & { id?: string }>({});
     
     // Schedule Editing State
     const [selectedClassForSchedule, setSelectedClassForSchedule] = useState<string>(schedulesData[0]?.className || '');
@@ -75,54 +81,146 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     // --- Save Identity ---
-    const saveIdentity = () => {
-        setSchoolProfile(identityForm);
-        alert('Data identitas sekolah berhasil disimpan!');
+    const saveIdentity = async () => {
+        setIsSaving(true);
+        try {
+            // Find the doc ID for profile. Since we only have 1 profile, we query it.
+            const querySnapshot = await getDocs(collection(db, "school_profile"));
+            if (!querySnapshot.empty) {
+                const docId = querySnapshot.docs[0].id;
+                await updateDoc(doc(db, "school_profile", docId), identityForm as any);
+            } else {
+                await addDoc(collection(db, "school_profile"), identityForm);
+            }
+            setSchoolProfile(identityForm);
+            alert('Data identitas sekolah berhasil disimpan!');
+        } catch (e) {
+            console.error(e);
+            alert("Gagal menyimpan.");
+        }
+        setIsSaving(false);
     };
 
     // --- CRUD: News ---
-    const saveNews = (e: React.FormEvent) => {
+    const saveNews = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (currentNews.id) {
-            setNewsData(prev => prev.map(item => item.id === currentNews.id ? currentNews as NewsItem : item));
-        } else {
-            setNewsData(prev => [{ ...currentNews, id: Date.now(), image: currentNews.image || 'https://picsum.photos/600/400' } as NewsItem, ...prev]);
+        setIsSaving(true);
+        try {
+            const dataToSave = {
+                title: currentNews.title,
+                date: currentNews.date,
+                category: currentNews.category || 'Pengumuman',
+                summary: currentNews.summary,
+                image: currentNews.image || 'https://picsum.photos/600/400'
+            };
+
+            if (currentNews.id) {
+                // Update
+                await updateDoc(doc(db, "news", String(currentNews.id)), dataToSave);
+                setNewsData(prev => prev.map(item => String(item.id) === String(currentNews.id) ? { ...item, ...dataToSave } : item));
+            } else {
+                // Create
+                const docRef = await addDoc(collection(db, "news"), dataToSave);
+                setNewsData(prev => [{ ...dataToSave, id: docRef.id } as any, ...prev]);
+            }
+            setIsEditing(false);
+            setCurrentNews({});
+        } catch (e) {
+            console.error(e);
+            alert("Error saving news");
         }
-        setIsEditing(false);
-        setCurrentNews({});
+        setIsSaving(false);
+    };
+
+    const deleteNews = async (id: string | number) => {
+        if(!confirm("Hapus berita ini?")) return;
+        try {
+            await deleteDoc(doc(db, "news", String(id)));
+            setNewsData(prev => prev.filter(n => String(n.id) !== String(id)));
+        } catch(e) { console.error(e); alert("Gagal menghapus"); }
     };
 
     // --- CRUD: Teachers ---
-    const saveTeacher = (e: React.FormEvent) => {
+    const saveTeacher = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (currentTeacher.id) {
-            setTeachersData(prev => prev.map(item => item.id === currentTeacher.id ? currentTeacher as Teacher : item));
-        } else {
-            setTeachersData(prev => [...prev, { ...currentTeacher, id: Date.now(), image: currentTeacher.image || 'https://picsum.photos/300/300' } as Teacher]);
-        }
-        setIsEditing(false);
-        setCurrentTeacher({});
+        setIsSaving(true);
+        try {
+            const dataToSave = {
+                name: currentTeacher.name,
+                role: currentTeacher.role,
+                image: currentTeacher.image || 'https://picsum.photos/300/300'
+            };
+            if (currentTeacher.id) {
+                await updateDoc(doc(db, "teachers", String(currentTeacher.id)), dataToSave);
+                setTeachersData(prev => prev.map(item => String(item.id) === String(currentTeacher.id) ? { ...item, ...dataToSave } : item));
+            } else {
+                const docRef = await addDoc(collection(db, "teachers"), dataToSave);
+                setTeachersData(prev => [...prev, { ...dataToSave, id: docRef.id } as any]);
+            }
+            setIsEditing(false);
+            setCurrentTeacher({});
+        } catch (e) { console.error(e); alert("Error saving teacher"); }
+        setIsSaving(false);
+    };
+
+    const deleteTeacher = async (id: string | number) => {
+        if(!confirm("Hapus guru ini?")) return;
+        try {
+            await deleteDoc(doc(db, "teachers", String(id)));
+            setTeachersData(prev => prev.filter(t => String(t.id) !== String(id)));
+        } catch(e) { console.error(e); }
     };
 
     // --- CRUD: Gallery ---
-    const saveGallery = (e: React.FormEvent) => {
+    const saveGallery = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (currentGallery.id) {
-            setGalleryData(prev => prev.map(item => item.id === currentGallery.id ? currentGallery as GalleryImage : item));
-        } else {
-            setGalleryData(prev => [...prev, { ...currentGallery, id: Date.now(), src: currentGallery.src || 'https://picsum.photos/800/600' } as GalleryImage]);
-        }
-        setIsEditing(false);
-        setCurrentGallery({});
+        setIsSaving(true);
+        try {
+            const dataToSave = {
+                caption: currentGallery.caption,
+                category: currentGallery.category || 'Fasilitas',
+                src: currentGallery.src || 'https://picsum.photos/800/600'
+            };
+            if (currentGallery.id) {
+                await updateDoc(doc(db, "gallery", String(currentGallery.id)), dataToSave);
+                setGalleryData(prev => prev.map(item => String(item.id) === String(currentGallery.id) ? { ...item, ...dataToSave } : item));
+            } else {
+                const docRef = await addDoc(collection(db, "gallery"), dataToSave);
+                setGalleryData(prev => [...prev, { ...dataToSave, id: docRef.id } as any]);
+            }
+            setIsEditing(false);
+            setCurrentGallery({});
+        } catch(e) { console.error(e); alert("Error saving gallery"); }
+        setIsSaving(false);
+    };
+
+    const deleteGallery = async (id: string | number) => {
+        if(!confirm("Hapus foto ini?")) return;
+        try {
+            await deleteDoc(doc(db, "gallery", String(id)));
+            setGalleryData(prev => prev.filter(g => String(g.id) !== String(id)));
+        } catch(e) { console.error(e); }
     };
 
     // --- CRUD: Schedule ---
-    const addScheduleItem = () => {
+    // Firestore Logic: Update the whole Class Document
+    const updateScheduleInFirestore = async (updatedClassSchedule: ClassSchedule) => {
+        try {
+            await setDoc(doc(db, "schedules", updatedClassSchedule.className), updatedClassSchedule);
+        } catch (e) {
+            console.error("Failed to update schedule", e);
+            alert("Gagal update jadwal ke database");
+        }
+    };
+
+    const addScheduleItem = async () => {
         if (!newScheduleItem.time || !newScheduleItem.subject) return;
 
-        setSchedulesData(prev => prev.map(cls => {
+        let updatedClass: ClassSchedule | null = null;
+
+        const newSchedules = schedulesData.map(cls => {
             if (cls.className === selectedClassForSchedule) {
-                return {
+                updatedClass = {
                     ...cls,
                     days: cls.days.map(day => {
                         if (day.dayName === selectedDayForSchedule) {
@@ -131,16 +229,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         return day;
                     })
                 };
+                return updatedClass;
             }
             return cls;
-        }));
+        });
+
+        if (updatedClass) {
+            setSchedulesData(newSchedules);
+            await updateScheduleInFirestore(updatedClass);
+        }
         setNewScheduleItem({ time: '', subject: '' });
     };
 
-    const deleteScheduleItem = (idx: number) => {
-        setSchedulesData(prev => prev.map(cls => {
+    const deleteScheduleItem = async (idx: number) => {
+        let updatedClass: ClassSchedule | null = null;
+
+        const newSchedules = schedulesData.map(cls => {
             if (cls.className === selectedClassForSchedule) {
-                return {
+                updatedClass = {
                     ...cls,
                     days: cls.days.map(day => {
                         if (day.dayName === selectedDayForSchedule) {
@@ -151,9 +257,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         return day;
                     })
                 };
+                return updatedClass;
             }
             return cls;
-        }));
+        });
+
+        if (updatedClass) {
+            setSchedulesData(newSchedules);
+            await updateScheduleInFirestore(updatedClass);
+        }
     };
 
     if (!isOpen) return null;
@@ -236,7 +348,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                     <div className="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
                                         <h3 className="font-bold text-blue-800 mb-2">👋 Selamat Datang Admin!</h3>
-                                        <p className="text-blue-600 text-sm">Gunakan menu di sebelah kiri untuk mengelola konten website. Perubahan yang Anda lakukan akan langsung terlihat oleh pengunjung (tersimpan sementara di browser).</p>
+                                        <p className="text-blue-600 text-sm">
+                                            Status: <span className="font-bold text-green-600">Online (Terhubung ke Firebase)</span><br/>
+                                            Gunakan menu di sebelah kiri untuk mengelola konten website. Perubahan akan langsung tersimpan di database Cloud.
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -390,9 +505,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             <div className="md:col-span-2 flex justify-end mt-4 pt-4 border-t border-slate-100">
                                                 <button 
                                                     onClick={saveIdentity}
-                                                    className="bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-600 transition-colors"
+                                                    disabled={isSaving}
+                                                    className="bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-600 transition-colors disabled:opacity-50"
                                                 >
-                                                    Simpan Perubahan
+                                                    {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                                                 </button>
                                             </div>
                                         </div>
@@ -425,7 +541,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </div>
                                             <div className="flex gap-2 justify-end">
                                                 <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-slate-500">Batal</button>
-                                                <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded">Simpan</button>
+                                                <button type="submit" disabled={isSaving} className="bg-brand-blue text-white px-4 py-2 rounded">{isSaving ? 'Menyimpan...' : 'Simpan'}</button>
                                             </div>
                                         </form>
                                     ) : (
@@ -437,8 +553,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <div className="text-xs text-slate-500">{item.date} • {item.category}</div>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <button onClick={() => { setCurrentNews(item); setIsEditing(true); }} className="text-blue-500 text-sm font-bold">Edit</button>
-                                                        <button onClick={() => setNewsData(prev => prev.filter(n => n.id !== item.id))} className="text-red-500 text-sm font-bold">Hapus</button>
+                                                        <button onClick={() => { setCurrentNews(item as any); setIsEditing(true); }} className="text-blue-500 text-sm font-bold">Edit</button>
+                                                        <button onClick={() => deleteNews(item.id)} className="text-red-500 text-sm font-bold">Hapus</button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -466,7 +582,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </div>
                                             <div className="flex gap-2 justify-end">
                                                 <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-slate-500">Batal</button>
-                                                <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded">Simpan</button>
+                                                <button type="submit" disabled={isSaving} className="bg-brand-blue text-white px-4 py-2 rounded">{isSaving ? 'Menyimpan...' : 'Simpan'}</button>
                                             </div>
                                         </form>
                                     ) : (
@@ -479,8 +595,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <div className="text-xs text-slate-500">{t.role}</div>
                                                     </div>
                                                     <div className="flex flex-col gap-1">
-                                                        <button onClick={() => { setCurrentTeacher(t); setIsEditing(true); }} className="text-blue-500 text-xs font-bold">Edit</button>
-                                                        <button onClick={() => setTeachersData(prev => prev.filter(item => item.id !== t.id))} className="text-red-500 text-xs font-bold">Hapus</button>
+                                                        <button onClick={() => { setCurrentTeacher(t as any); setIsEditing(true); }} className="text-blue-500 text-xs font-bold">Edit</button>
+                                                        <button onClick={() => deleteTeacher(t.id)} className="text-red-500 text-xs font-bold">Hapus</button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -562,7 +678,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </div>
                                             <div className="flex gap-2 justify-end">
                                                 <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 text-slate-500">Batal</button>
-                                                <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded">Simpan</button>
+                                                <button type="submit" disabled={isSaving} className="bg-brand-blue text-white px-4 py-2 rounded">{isSaving ? 'Menyimpan...' : 'Simpan'}</button>
                                             </div>
                                         </form>
                                     ) : (
@@ -573,7 +689,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
                                                         <p className="text-white text-xs font-bold truncate">{item.caption}</p>
                                                         <div className="flex justify-end mt-2">
-                                                            <button onClick={() => setGalleryData(prev => prev.filter(g => g.id !== item.id))} className="bg-red-500 text-white text-xs px-2 py-1 rounded">Hapus</button>
+                                                            <button onClick={() => deleteGallery(item.id)} className="bg-red-500 text-white text-xs px-2 py-1 rounded">Hapus</button>
                                                         </div>
                                                     </div>
                                                 </div>
