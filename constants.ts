@@ -17,7 +17,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const TEACHERS: Teacher[] = [
-  { id: 1, name: "Budi Santoso, S.Pd", role: "Kepala Sekolah", image: "https://picsum.photos/id/1005/300/300" },
+  { id: 1, name: "Nita Ekaningkarti Adji, S.Pd", role: "Kepala Sekolah", image: "https://picsum.photos/id/1005/300/300" },
   { id: 2, name: "Siti Aminah, S.Pd", role: "Wali Kelas 1", image: "https://picsum.photos/id/1011/300/300" },
   { id: 3, name: "Rahmat Hidayat, S.Kom", role: "Guru TIK", image: "https://picsum.photos/id/1025/300/300" },
   { id: 4, name: "Dewi Lestari, S.Sn", role: "Guru Kesenian", image: "https://picsum.photos/id/1027/300/300" },
@@ -156,6 +156,7 @@ Nama: ${SCHOOL_NAME}
 Alamat: ${SCHOOL_ADDRESS}
 Telepon: ${SCHOOL_PHONE}
 Email: ${SCHOOL_EMAIL}
+Kepala Sekolah: Nita Ekaningkarti Adji, S.Pd
 
 Visi: Terwujudnya peserta didik yang beriman, cerdas, terampil, dan berkarakter.
 Misi: 

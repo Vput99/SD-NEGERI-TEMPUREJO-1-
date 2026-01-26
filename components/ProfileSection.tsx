@@ -9,8 +9,13 @@ interface ProfileSectionProps {
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({ teachers, schoolName, onSeeAllClick }) => {
-  const principal = teachers[0];
-  const otherTeachers = teachers.slice(1, 6); // Limit to 5 items for the preview
+  // Find Headmaster specifically, fallback to first item if not found
+  const principal = teachers.find(t => t.role.includes("Kepala")) || teachers[0];
+  
+  // Exclude Principal from the "Other Teachers" list to avoid duplication
+  const otherTeachers = teachers
+    .filter(t => t.id !== principal?.id)
+    .slice(0, 5); 
 
   return (
     <section id="profil" className="py-24 container mx-auto px-4 relative overflow-hidden bg-white">

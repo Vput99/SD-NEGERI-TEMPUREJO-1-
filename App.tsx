@@ -15,7 +15,7 @@ import NewsDetailPage from './components/NewsDetailPage'; // Import News Detail
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from './types';
 import { db } from './services/firebase';
-import { collection, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 
 function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -89,7 +89,29 @@ function App() {
         // 3. Check & Fetch Teachers
         const teachersSnap = await getDocs(collection(db, "teachers"));
         if (!teachersSnap.empty) {
-            const fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
+            let fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
+            
+            // AUTO-FIX: Check if Principal Name in DB is outdated, if so, update it
+            const principalInConstants = TEACHERS.find(t => t.role === "Kepala Sekolah");
+            const principalInDB = fetchedTeachers.find((t: any) => t.role === "Kepala Sekolah");
+            
+            if (principalInConstants && principalInDB && principalInDB.name !== principalInConstants.name) {
+                console.log("Updating Principal Name...");
+                // Update Firestore
+                await updateDoc(doc(db, "teachers", principalInDB.id), { 
+                    name: principalInConstants.name 
+                });
+                // Update Local State
+                principalInDB.name = principalInConstants.name;
+            }
+
+            // Sort logic: Put 'Kepala Sekolah' first, then others
+            fetchedTeachers.sort((a, b) => {
+                if (a.role === "Kepala Sekolah") return -1;
+                if (b.role === "Kepala Sekolah") return 1;
+                return 0;
+            });
+
             setTeachersData(fetchedTeachers);
         } else {
             for (const item of TEACHERS) {
@@ -128,7 +150,7 @@ function App() {
 
       } catch (error) {
         console.error("Error connecting to Firebase:", error);
-        alert("Gagal terhubung ke database. Pastikan config firebase.ts sudah benar.");
+        // alert("Gagal terhubung ke database. Pastikan config firebase.ts sudah benar.");
       } finally {
         setLoading(false);
       }
