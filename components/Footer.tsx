@@ -15,11 +15,12 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
        <div className="absolute inset-0 bg-nature-pattern opacity-5 mix-blend-overlay"></div>
 
       <div className="container mx-auto px-4 relative z-10 mb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16">
             
-            {/* Column 1: Identity (Span 5 on LG) */}
-            <div className="lg:col-span-5 flex flex-col gap-6">
-                <div className="flex items-start gap-4">
+            {/* Column 1: Identity */}
+            {/* Mobile: Center. Tablet: Full Width Center. Desktop: Left Align Span 5 */}
+            <div className="md:col-span-12 lg:col-span-5 flex flex-col gap-6 items-center text-center lg:items-start lg:text-left">
+                <div className="flex flex-col lg:flex-row items-center gap-4">
                     {/* Main School Logo */}
                     <div className="shrink-0 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-sm">
                         {schoolProfile.logo ? (
@@ -37,7 +38,7 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
                         </h3>
                         {/* Secondary Logos Row */}
                         {(schoolProfile.logoDaerah || schoolProfile.logoMapan) && (
-                           <div className="flex items-center gap-4">
+                           <div className="flex items-center justify-center lg:justify-start gap-4">
                                 {schoolProfile.logoDaerah && (
                                     <img src={schoolProfile.logoDaerah} alt="Logo Daerah" className="h-10 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
                                 )}
@@ -49,7 +50,7 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
                     </div>
                 </div>
 
-                <p className="text-sm leading-relaxed text-slate-400">
+                <p className="text-sm leading-relaxed text-slate-400 max-w-md">
                     Menjadi pelopor sekolah ramah lingkungan yang mengintegrasikan teknologi dan alam untuk membentuk karakter siswa yang unggul, kreatif, dan peduli terhadap kelestarian bumi.
                 </p>
 
@@ -66,40 +67,42 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
                 </div>
             </div>
 
-            {/* Column 2: Navigation (Span 3 on LG) */}
-            <div className="lg:col-span-3 lg:pl-10">
+            {/* Column 2: Navigation */}
+            {/* Mobile: Center. Tablet: 5 cols. Desktop: 3 cols */}
+            <div className="md:col-span-5 lg:col-span-3 lg:pl-10 flex flex-col items-center md:items-start text-center md:text-left">
                 <h3 className="font-display text-white font-bold text-lg mb-6 relative inline-block">
                     Menu Utama
-                    <span className="absolute -bottom-2 left-0 w-8 h-1 bg-brand-primary rounded-full"></span>
+                    <span className="absolute -bottom-2 left-0 right-0 md:right-auto w-8 h-1 bg-brand-primary rounded-full mx-auto md:mx-0"></span>
                 </h3>
-                <ul className="space-y-3 text-sm">
-                    <li><a href="#beranda" onClick={(e) => scrollToSection(e, '#beranda')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Beranda</a></li>
-                    <li><a href="#profil" onClick={(e) => scrollToSection(e, '#profil')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Profil Sekolah</a></li>
-                    <li><a href="#informasi" onClick={(e) => scrollToSection(e, '#informasi')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Berita</a></li>
-                    <li><a href="#jadwal" onClick={(e) => scrollToSection(e, '#jadwal')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Jadwal</a></li>
-                    <li><a href="#ujian" onClick={(e) => scrollToSection(e, '#ujian')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Ujian Akhir</a></li>
-                    <li><a href="#galeri" onClick={(e) => scrollToSection(e, '#galeri')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Galeri</a></li>
+                <ul className="space-y-3 text-sm w-full max-w-xs md:max-w-none">
+                    <li><a href="#beranda" onClick={(e) => scrollToSection(e, '#beranda')} className="hover:text-brand-accent transition-colors flex items-center justify-center md:justify-start gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Beranda</a></li>
+                    <li><a href="#profil" onClick={(e) => scrollToSection(e, '#profil')} className="hover:text-brand-accent transition-colors flex items-center justify-center md:justify-start gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Profil Sekolah</a></li>
+                    <li><a href="#informasi" onClick={(e) => scrollToSection(e, '#informasi')} className="hover:text-brand-accent transition-colors flex items-center justify-center md:justify-start gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Berita</a></li>
+                    <li><a href="#jadwal" onClick={(e) => scrollToSection(e, '#jadwal')} className="hover:text-brand-accent transition-colors flex items-center justify-center md:justify-start gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Jadwal</a></li>
+                    <li><a href="#ujian" onClick={(e) => scrollToSection(e, '#ujian')} className="hover:text-brand-accent transition-colors flex items-center justify-center md:justify-start gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Ujian Akhir</a></li>
+                    <li><a href="#galeri" onClick={(e) => scrollToSection(e, '#galeri')} className="hover:text-brand-accent transition-colors flex items-center justify-center md:justify-start gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Galeri</a></li>
                 </ul>
             </div>
 
-            {/* Column 3: Contact (Span 4 on LG) */}
-            <div className="lg:col-span-4">
+            {/* Column 3: Contact */}
+            {/* Mobile: Center. Tablet: 7 cols. Desktop: 4 cols */}
+            <div className="md:col-span-7 lg:col-span-4 flex flex-col items-center md:items-start text-center md:text-left">
                 <h3 className="font-display text-white font-bold text-lg mb-6 relative inline-block">
                     Hubungi Kami
-                    <span className="absolute -bottom-2 left-0 w-8 h-1 bg-brand-accent rounded-full"></span>
+                    <span className="absolute -bottom-2 left-0 right-0 md:right-auto w-8 h-1 bg-brand-accent rounded-full mx-auto md:mx-0"></span>
                 </h3>
-                <ul className="space-y-4 text-sm">
-                    <li className="flex items-start gap-4 group">
-                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5">📍</div>
-                        <span className="leading-relaxed py-2">{schoolProfile.address}</span>
+                <ul className="space-y-4 text-sm w-full max-w-sm md:max-w-none">
+                    <li className="flex items-start justify-center md:justify-start gap-4 group">
+                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5 mt-0.5">📍</div>
+                        <span className="leading-relaxed py-1">{schoolProfile.address}</span>
                     </li>
-                    <li className="flex items-center gap-4 group">
+                    <li className="flex items-center justify-center md:justify-start gap-4 group">
                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5">📞</div>
-                        <span className="py-2">{schoolProfile.phone}</span>
+                        <span>{schoolProfile.phone}</span>
                     </li>
-                    <li className="flex items-center gap-4 group">
+                    <li className="flex items-center justify-center md:justify-start gap-4 group">
                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5">✉️</div>
-                        <span className="py-2">{schoolProfile.email}</span>
+                        <span>{schoolProfile.email}</span>
                     </li>
                 </ul>
             </div>
