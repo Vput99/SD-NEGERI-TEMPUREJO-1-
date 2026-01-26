@@ -26,11 +26,11 @@ export const TEACHERS: Teacher[] = [
 export const NEWS: NewsItem[] = [
   {
     id: 1,
-    title: "Penerimaan Siswa Baru Tahun Ajaran 2024/2025",
-    date: "10 Mei 2024",
+    title: "Penerimaan Siswa Baru Tahun Ajaran 2025/2026",
+    date: "10 Mei 2025",
     category: "Pengumuman",
     summary: "Segera daftarkan putra-putri Anda! Kuota terbatas untuk gelombang pertama.",
-    content: "Penerimaan Peserta Didik Baru (PPDB) untuk tahun ajaran 2024/2025 telah resmi dibuka. Kami mengundang para orang tua untuk mendaftarkan putra-putrinya di sekolah kami yang mengedepankan pendidikan karakter dan lingkungan. \n\nSyarat Pendaftaran:\n1. Mengisi formulir pendaftaran\n2. Fotokopi Akta Kelahiran\n3. Fotokopi Kartu Keluarga\n\nSegera kunjungi sekretariat kami pada jam kerja untuk informasi lebih lanjut.",
+    content: "Penerimaan Peserta Didik Baru (PPDB) untuk tahun ajaran 2025/2026 telah resmi dibuka. Kami mengundang para orang tua untuk mendaftarkan putra-putrinya di sekolah kami yang mengedepankan pendidikan karakter dan lingkungan. \n\nSyarat Pendaftaran:\n1. Mengisi formulir pendaftaran\n2. Fotokopi Akta Kelahiran\n3. Fotokopi Kartu Keluarga\n\nSegera kunjungi sekretariat kami pada jam kerja untuk informasi lebih lanjut.",
     image: "https://picsum.photos/id/20/600/400"
   },
   {

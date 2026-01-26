@@ -76,6 +76,25 @@ function App() {
         const newsSnap = await getDocs(collection(db, "news"));
         if (!newsSnap.empty) {
             const fetchedNews = newsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
+            
+            // SYNC FIX FOR NEWS (PPDB YEAR)
+            // Automatically update old PPDB news to new year if found
+            const ppdbNews = fetchedNews.find((n: any) => n.title.includes("Penerimaan Siswa Baru"));
+            const targetPPDB = NEWS.find(n => n.title.includes("Penerimaan Siswa Baru"));
+
+            if (ppdbNews && targetPPDB && ppdbNews.title !== targetPPDB.title) {
+                 console.log("Syncing PPDB News year to 2025/2026...");
+                 await updateDoc(doc(db, "news", ppdbNews.id), {
+                     title: targetPPDB.title,
+                     date: targetPPDB.date,
+                     content: targetPPDB.content
+                 });
+                 // Update local object to reflect in UI immediately
+                 ppdbNews.title = targetPPDB.title;
+                 ppdbNews.date = targetPPDB.date;
+                 ppdbNews.content = targetPPDB.content;
+            }
+
             setNewsData(fetchedNews);
         } else {
             for (const item of NEWS) {
