@@ -47,8 +47,22 @@ function App() {
         // 1. Check & Fetch Profile
         const profileSnap = await getDocs(collection(db, "school_profile"));
         if (!profileSnap.empty) {
-            // Use the first document found
-            setSchoolProfile(profileSnap.docs[0].data() as SchoolProfile);
+            const data = profileSnap.docs[0].data();
+            // Merge with defaults to ensure no undefined values
+            setSchoolProfile({
+                name: data.name || SCHOOL_NAME,
+                address: data.address || SCHOOL_ADDRESS,
+                phone: data.phone || SCHOOL_PHONE,
+                email: data.email || SCHOOL_EMAIL,
+                logo: data.logo || "",
+                logoDaerah: data.logoDaerah || "",
+                logoMapan: data.logoMapan || "",
+                socialMedia: {
+                    facebook: data.socialMedia?.facebook || "",
+                    instagram: data.socialMedia?.instagram || "",
+                    youtube: data.socialMedia?.youtube || ""
+                }
+            });
         } else {
             // Seed Profile if empty
             await addDoc(collection(db, "school_profile"), schoolProfile);
@@ -62,11 +76,9 @@ function App() {
         } else {
             // Seed News
             for (const item of NEWS) {
-                // Remove numeric ID, let Firestore generate string ID
                 const { id, ...data } = item; 
                 await addDoc(collection(db, "news"), data);
             }
-            // Fetch again after seed
             const newSnap = await getDocs(collection(db, "news"));
             setNewsData(newSnap.docs.map(d => ({ ...d.data(), id: d.id } as any)));
         }
@@ -102,7 +114,6 @@ function App() {
         }
 
         // 5. Check & Fetch Schedules
-        // Note: Schedule structure is complex. We store each Class as a document.
         const scheduleSnap = await getDocs(collection(db, "schedules"));
         if (!scheduleSnap.empty) {
             const fetchedSchedules = scheduleSnap.docs.map(d => d.data() as ClassSchedule);
@@ -110,7 +121,6 @@ function App() {
         } else {
             // Seed Schedules
             for (const item of CLASS_SCHEDULES) {
-                // Use className as custom ID to ensure uniqueness easier
                 await setDoc(doc(db, "schedules", item.className), item);
             }
             setSchedulesData(CLASS_SCHEDULES);

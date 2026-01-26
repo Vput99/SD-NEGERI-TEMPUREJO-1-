@@ -44,8 +44,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [identityForm, setIdentityForm] = useState<SchoolProfile>(schoolProfile);
 
     // Generic holders for editing
-    // Note: ID in Firebase is string, but types.ts says number. 
-    // We cast strictly here.
     const [currentNews, setCurrentNews] = useState<Partial<NewsItem> & { id?: string }>({});
     const [currentTeacher, setCurrentTeacher] = useState<Partial<Teacher> & { id?: string }>({});
     const [currentGallery, setCurrentGallery] = useState<Partial<GalleryImage> & { id?: string }>({});
@@ -84,19 +82,35 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const saveIdentity = async () => {
         setIsSaving(true);
         try {
+            // Sanitasi data: pastikan tidak ada field undefined karena Firestore menolaknya
+            const cleanData = {
+                name: identityForm.name || "",
+                address: identityForm.address || "",
+                phone: identityForm.phone || "",
+                email: identityForm.email || "",
+                logo: identityForm.logo || "",
+                logoDaerah: identityForm.logoDaerah || "",
+                logoMapan: identityForm.logoMapan || "",
+                socialMedia: {
+                    facebook: identityForm.socialMedia?.facebook || "",
+                    instagram: identityForm.socialMedia?.instagram || "",
+                    youtube: identityForm.socialMedia?.youtube || ""
+                }
+            };
+
             // Find the doc ID for profile. Since we only have 1 profile, we query it.
             const querySnapshot = await getDocs(collection(db, "school_profile"));
             if (!querySnapshot.empty) {
                 const docId = querySnapshot.docs[0].id;
-                await updateDoc(doc(db, "school_profile", docId), identityForm as any);
+                await updateDoc(doc(db, "school_profile", docId), cleanData);
             } else {
-                await addDoc(collection(db, "school_profile"), identityForm);
+                await addDoc(collection(db, "school_profile"), cleanData);
             }
-            setSchoolProfile(identityForm);
+            setSchoolProfile(cleanData);
             alert('Data identitas sekolah berhasil disimpan!');
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Gagal menyimpan.");
+            alert("Gagal menyimpan: " + (e.message || "Terjadi kesalahan tidak diketahui. Cek Rules Firebase."));
         }
         setIsSaving(false);
     };
@@ -107,10 +121,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsSaving(true);
         try {
             const dataToSave = {
-                title: currentNews.title,
-                date: currentNews.date,
+                title: currentNews.title || "",
+                date: currentNews.date || "",
                 category: currentNews.category || 'Pengumuman',
-                summary: currentNews.summary,
+                summary: currentNews.summary || "",
                 image: currentNews.image || 'https://picsum.photos/600/400'
             };
 
@@ -125,9 +139,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
             setIsEditing(false);
             setCurrentNews({});
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error saving news");
+            alert("Gagal menyimpan berita: " + e.message);
         }
         setIsSaving(false);
     };
@@ -146,8 +160,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsSaving(true);
         try {
             const dataToSave = {
-                name: currentTeacher.name,
-                role: currentTeacher.role,
+                name: currentTeacher.name || "",
+                role: currentTeacher.role || "",
                 image: currentTeacher.image || 'https://picsum.photos/300/300'
             };
             if (currentTeacher.id) {
@@ -159,7 +173,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
             setIsEditing(false);
             setCurrentTeacher({});
-        } catch (e) { console.error(e); alert("Error saving teacher"); }
+        } catch (e: any) { console.error(e); alert("Gagal menyimpan guru: " + e.message); }
         setIsSaving(false);
     };
 
@@ -177,7 +191,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsSaving(true);
         try {
             const dataToSave = {
-                caption: currentGallery.caption,
+                caption: currentGallery.caption || "",
                 category: currentGallery.category || 'Fasilitas',
                 src: currentGallery.src || 'https://picsum.photos/800/600'
             };
@@ -190,7 +204,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
             setIsEditing(false);
             setCurrentGallery({});
-        } catch(e) { console.error(e); alert("Error saving gallery"); }
+        } catch(e: any) { console.error(e); alert("Gagal menyimpan galeri: " + e.message); }
         setIsSaving(false);
     };
 
@@ -207,9 +221,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const updateScheduleInFirestore = async (updatedClassSchedule: ClassSchedule) => {
         try {
             await setDoc(doc(db, "schedules", updatedClassSchedule.className), updatedClassSchedule);
-        } catch (e) {
+        } catch (e: any) {
             console.error("Failed to update schedule", e);
-            alert("Gagal update jadwal ke database");
+            alert("Gagal update jadwal ke database: " + e.message);
         }
     };
 
