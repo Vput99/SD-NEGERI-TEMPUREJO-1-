@@ -3,33 +3,42 @@ import React from 'react';
 
 const PPDBSection: React.FC = () => {
   return (
-    <section id="ppdb" className="py-24 bg-gradient-to-b from-brand-light to-white relative overflow-hidden">
-       {/* Background Elements */}
-       <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl animate-float"></div>
-       <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-accent/10 rounded-full blur-3xl animate-float delay-1000"></div>
-
-      <div className="container mx-auto px-4 text-center relative z-10">
-        <h2 className="font-display text-4xl font-bold text-brand-dark mb-10">Penerimaan Peserta Didik Baru</h2>
+    <section id="ppdb" className="py-24 bg-white relative overflow-hidden">
+      <div className="container mx-auto px-4 relative z-10">
         
-        <div className="relative inline-block group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-            <div className="relative glass bg-white/60 px-8 py-16 md:px-20 rounded-3xl border border-white/60 shadow-xl backdrop-blur-xl">
-                <div className="text-6xl mb-6 animate-bounce">📢</div>
-                <h3 className="font-display text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-dark to-brand-primary tracking-tight mb-4">
-                    COMING SOON
-                </h3>
-                <p className="text-xl md:text-2xl text-slate-600 font-bold mb-8">
-                    Tahun Ajaran 2024/2025
+        <div className="relative rounded-[3rem] overflow-hidden shadow-2xl shadow-brand-primary/20 bg-brand-dark">
+            {/* Background Art */}
+            <div className="absolute inset-0">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-primary rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-blue rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            </div>
+
+            <div className="relative z-10 px-8 py-20 md:px-20 text-center">
+                <span className="inline-block px-4 py-1 rounded-full border border-white/20 bg-white/10 text-brand-accent font-bold text-sm mb-6 backdrop-blur-sm">
+                    Penerimaan Peserta Didik Baru
+                </span>
+                
+                <h2 className="font-display text-5xl md:text-7xl font-black text-white mb-6 tracking-tight">
+                    OPENING SOON <br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-brand-yellow">2024 / 2025</span>
+                </h2>
+                
+                <p className="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+                    Siapkan masa depan buah hati Anda bersama kami. Pendidikan berkarakter, lingkungan asri, dan teknologi terkini.
                 </p>
-                <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-                    <span className="px-6 py-2 bg-brand-primary/10 text-brand-dark rounded-full text-sm font-bold border border-brand-primary/20 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></span>
-                        Segera Dibuka
-                    </span>
-                    <span className="text-slate-400 text-sm">Pantau terus informasi terbaru di website kami!</span>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <button disabled className="px-8 py-4 bg-white text-brand-dark rounded-full font-bold text-lg hover:bg-slate-100 transition-colors shadow-lg disabled:opacity-80 disabled:cursor-not-allowed">
+                        ⏳ Pendaftaran Belum Dibuka
+                    </button>
+                    <a href="#kontak" className="px-8 py-4 bg-transparent border border-white/30 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors">
+                        Hubungi Kami
+                    </a>
                 </div>
             </div>
         </div>
+
       </div>
     </section>
   );
