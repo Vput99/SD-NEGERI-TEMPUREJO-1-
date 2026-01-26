@@ -50,7 +50,38 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white mt-16 md:mt-0">
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white mt-16 md:mt-0 flex flex-col items-center">
+        
+        {/* Logos Display (Static, Large, Blended) */}
+        <div className="flex items-center justify-center gap-4 md:gap-8 mb-6 md:mb-8">
+            {/* Logo Daerah (Kiri) */}
+            {schoolProfile.logoDaerah && (
+                <img 
+                    src={schoolProfile.logoDaerah} 
+                    alt="Logo Daerah" 
+                    className="w-16 h-16 md:w-24 md:h-24 object-contain drop-shadow-xl" 
+                />
+            )}
+            
+            {/* Logo Sekolah (Tengah - Besar) */}
+            {schoolProfile.logo && (
+                <img 
+                    src={schoolProfile.logo} 
+                    alt="Logo Sekolah" 
+                    className="w-28 h-28 md:w-48 md:h-48 object-contain drop-shadow-2xl" 
+                />
+            )}
+
+            {/* Logo Mapan (Kanan) */}
+            {schoolProfile.logoMapan && (
+                <img 
+                    src={schoolProfile.logoMapan} 
+                    alt="Logo Mapan" 
+                    className="w-16 h-16 md:w-24 md:h-24 object-contain drop-shadow-xl" 
+                />
+            )}
+        </div>
+
         <div className="mb-6 md:mb-8 inline-flex items-center gap-2 glass px-4 py-1.5 md:px-6 md:py-2 rounded-full animate-float shadow-lg border-brand-accent/30">
             <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-brand-accent animate-pulse"></span>
             <span className="text-brand-light font-bold text-xs md:text-sm uppercase tracking-wider">
