@@ -1,10 +1,10 @@
 
 import { NavItem, Teacher, NewsItem, ClassSchedule, GalleryImage } from './types';
 
-export const SCHOOL_NAME = "SD Harapan Bangsa";
-export const SCHOOL_ADDRESS = "Jl. Pendidikan No. 123, Jakarta Selatan";
-export const SCHOOL_PHONE = "(021) 555-0123";
-export const SCHOOL_EMAIL = "info@sdharapanbangsa.sch.id";
+export const SCHOOL_NAME = "SD Negeri Tempurejo 1";
+export const SCHOOL_ADDRESS = "Jl. Raya Tempurejo No. 1, Jawa Timur"; // Alamat default, bisa diubah di Admin
+export const SCHOOL_PHONE = "(0331) 123-4567";
+export const SCHOOL_EMAIL = "info@sdntempurejo1.sch.id";
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Beranda", href: "#beranda" },
@@ -144,7 +144,7 @@ export const GALLERY: GalleryImage[] = [
 ];
 
 export const SYSTEM_CONTEXT = `
-Anda adalah asisten virtual bernama "Bu Guru AI" untuk website SD Harapan Bangsa. 
+Anda adalah asisten virtual bernama "Bu Guru AI" untuk website ${SCHOOL_NAME}. 
 Gaya bicara Anda ramah, sopan, keibuan, dan sangat membantu, seperti seorang guru SD yang baik hati.
 Jawablah pertanyaan dalam Bahasa Indonesia.
 
