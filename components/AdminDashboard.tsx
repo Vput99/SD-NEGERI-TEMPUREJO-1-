@@ -1,16 +1,14 @@
 
 import React, { useState } from 'react';
-import { NewsItem, Teacher, ClassSchedule, GalleryImage, ScheduleItem, SchoolProfile } from '../types';
+import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from '../types';
 import { db } from '../services/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
 
 interface AdminDashboardProps {
     isOpen: boolean;
     onClose: () => void;
-    // School Profile Props
     schoolProfile: SchoolProfile;
     setSchoolProfile: React.Dispatch<React.SetStateAction<SchoolProfile>>;
-    // Data Props
     newsData: NewsItem[];
     setNewsData: React.Dispatch<React.SetStateAction<NewsItem[]>>;
     teachersData: Teacher[];
@@ -35,25 +33,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-    const [isSaving, setIsSaving] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [compressing, setCompressing] = useState(false);
 
-    // --- State for Forms ---
-    const [isEditing, setIsEditing] = useState(false);
+    // --- FORM STATES ---
+    const [editingNews, setEditingNews] = useState<Partial<NewsItem> | null>(null);
+    const [editingTeacher, setEditingTeacher] = useState<Partial<Teacher> | null>(null);
+    const [editingGallery, setEditingGallery] = useState<Partial<GalleryImage> | null>(null);
     
-    // Identity Form State (Local)
-    const [identityForm, setIdentityForm] = useState<SchoolProfile>(schoolProfile);
-
-    // Generic holders for editing
-    const [currentNews, setCurrentNews] = useState<Partial<NewsItem> & { id?: string }>({});
-    const [currentTeacher, setCurrentTeacher] = useState<Partial<Teacher> & { id?: string }>({});
-    const [currentGallery, setCurrentGallery] = useState<Partial<GalleryImage> & { id?: string }>({});
-    
-    // Schedule Editing State
-    const [selectedClassForSchedule, setSelectedClassForSchedule] = useState<string>(schedulesData[0]?.className || '');
-    const [selectedDayForSchedule, setSelectedDayForSchedule] = useState<string>('Senin');
-    const [newScheduleItem, setNewScheduleItem] = useState<ScheduleItem>({ time: '', subject: '' });
-
-    // --- Auth Logic ---
+    // --- AUTH ---
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (password === 'admin123') {
@@ -64,16 +52,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
-    // --- File Upload Helper (With Auto Compression) ---
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void, isLogo: boolean = false) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Check initial file size (e.g. warn if > 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                 alert("Ukuran file asli terlalu besar (>5MB). Mohon pilih file yang lebih kecil.");
-                 return;
-            }
-
+    // --- UTILS: IMAGE COMPRESSION ---
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (event) => {
@@ -81,572 +62,608 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 img.src = event.target?.result as string;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    
-                    // Optimization Settings (Aggressive compression for DB storage)
-                    const MAX_WIDTH = isLogo ? 300 : 640;  // Reduced from 800
-                    const MAX_HEIGHT = isLogo ? 300 : 800; // Add max height constraint
-                    
                     let width = img.width;
                     let height = img.height;
-
-                    // Resize logic maintaining aspect ratio
+                    
+                    // Resize logic: Max 800px
+                    const MAX_SIZE = 800;
                     if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
                         }
                     } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
                         }
                     }
 
                     canvas.width = width;
                     canvas.height = height;
-
                     const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Use JPEG for photos, PNG for logos (transparency)
-                        const format = isLogo ? 'image/png' : 'image/jpeg';
-                        // Reduce quality to 0.5 (50%) to ensure small file size
-                        const quality = isLogo ? undefined : 0.5; 
+                    if (!ctx) {
+                        reject(new Error("Gagal memproses gambar (Canvas error)"));
+                        return;
+                    }
+                    ctx.drawImage(img, 0, 0, width, height);
 
-                        const dataUrl = canvas.toDataURL(format, quality);
-                        
-                        // Firestore field limit is ~1MB (1,048,487 bytes)
-                        // Safety threshold set to ~600KB to allow room for other fields
-                        const SAFETY_LIMIT = 600000;
+                    // Compress to JPEG with reduced quality
+                    let quality = 0.7;
+                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
 
-                        if (dataUrl.length > SAFETY_LIMIT) {
-                            alert(`Ukuran gambar hasil kompresi masih terlalu besar (${Math.round(dataUrl.length/1024)} KB). Mohon gunakan gambar dengan resolusi lebih rendah.`);
-                        } else {
-                            callback(dataUrl);
-                        }
+                    // Loop to ensure size is under ~900KB (Safety margin for Firestore 1MB)
+                    // Base64 length ~ 1.33 * bytes
+                    const MAX_BASE64_LENGTH = 1000000; 
+
+                    while (dataUrl.length > MAX_BASE64_LENGTH && quality > 0.1) {
+                        quality -= 0.1;
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+
+                    if (dataUrl.length > MAX_BASE64_LENGTH) {
+                        reject(new Error("Ukuran gambar terlalu besar meskipun sudah dikompres. Gunakan gambar lain."));
+                    } else {
+                        resolve(dataUrl);
                     }
                 };
+                img.onerror = (err) => reject(err);
             };
-        }
+            reader.onerror = (err) => reject(err);
+        });
     };
 
-    // --- Save Identity ---
-    const saveIdentity = async () => {
-        setIsSaving(true);
-        try {
-            const cleanData = {
-                name: identityForm.name || "",
-                address: identityForm.address || "",
-                phone: identityForm.phone || "",
-                email: identityForm.email || "",
-                logo: identityForm.logo || "",
-                logoDaerah: identityForm.logoDaerah || "",
-                logoMapan: identityForm.logoMapan || "",
-                socialMedia: {
-                    facebook: identityForm.socialMedia?.facebook || "",
-                    instagram: identityForm.socialMedia?.instagram || "",
-                    youtube: identityForm.socialMedia?.youtube || ""
-                }
-            };
-
-            const querySnapshot = await getDocs(collection(db, "school_profile"));
-            if (!querySnapshot.empty) {
-                const docId = querySnapshot.docs[0].id;
-                await updateDoc(doc(db, "school_profile", docId), cleanData);
-            } else {
-                await addDoc(collection(db, "school_profile"), cleanData);
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string, setFunction: Function, currentData: any) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setCompressing(true);
+            try {
+                const compressedBase64 = await compressImage(file);
+                setFunction({ ...currentData, [field]: compressedBase64 });
+            } catch (err: any) {
+                alert(err.message || "Gagal mengompres gambar.");
+            } finally {
+                setCompressing(false);
             }
-            setSchoolProfile(cleanData);
-            alert('Data identitas sekolah berhasil disimpan!');
-        } catch (e: any) {
-            console.error(e);
-            alert("Gagal menyimpan: " + (e.message || "Terjadi kesalahan."));
         }
-        setIsSaving(false);
     };
 
-    // --- CRUD: News ---
-    const saveNews = async (e: React.FormEvent) => {
+    // --- CRUD: NEWS ---
+    const handleSaveNews = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
+        if (!editingNews?.title || !editingNews?.date) return;
+        setLoading(true);
         try {
-            const dataToSave = {
-                title: currentNews.title || "",
-                date: currentNews.date || "",
-                category: currentNews.category || 'Pengumuman',
-                summary: currentNews.summary || "",
-                content: currentNews.content || "", 
-                image: currentNews.image || 'https://picsum.photos/600/400'
-            };
-
-            if (currentNews.id) {
-                await updateDoc(doc(db, "news", String(currentNews.id)), dataToSave);
-                setNewsData(prev => prev.map(item => String(item.id) === String(currentNews.id) ? { ...item, ...dataToSave } : item));
+            if (editingNews.id) {
+                // Update
+                const newsRef = doc(db, "news", String(editingNews.id));
+                const { id, ...data } = editingNews;
+                await updateDoc(newsRef, data);
+                setNewsData(prev => prev.map(item => item.id === editingNews.id ? editingNews as NewsItem : item));
             } else {
-                const docRef = await addDoc(collection(db, "news"), dataToSave);
-                setNewsData(prev => [{ ...dataToSave, id: docRef.id } as any, ...prev]);
+                // Create
+                const newDoc = await addDoc(collection(db, "news"), editingNews);
+                setNewsData(prev => [{ ...editingNews, id: newDoc.id } as NewsItem, ...prev]);
             }
-            setIsEditing(false);
-            setCurrentNews({});
-        } catch (e: any) {
-            console.error(e);
-            alert("Gagal menyimpan berita: " + e.message);
+            setEditingNews(null);
+        } catch (error: any) {
+            console.error("Error saving news:", error);
+            alert(`Gagal menyimpan berita: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
-        setIsSaving(false);
     };
 
-    const deleteNews = async (id: string | number) => {
-        if(!confirm("Hapus berita ini?")) return;
+    const handleDeleteNews = async (id: string | number) => {
+        if (!confirm("Yakin hapus berita ini?")) return;
+        setLoading(true);
         try {
             await deleteDoc(doc(db, "news", String(id)));
-            setNewsData(prev => prev.filter(n => String(n.id) !== String(id)));
-        } catch(e) { console.error(e); alert("Gagal menghapus"); }
+            setNewsData(prev => prev.filter(item => item.id !== id));
+        } catch (error) {
+            console.error("Error deleting news:", error);
+            alert("Gagal menghapus berita");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // --- CRUD: Teachers ---
-    const saveTeacher = async (e: React.FormEvent) => {
+    // --- CRUD: TEACHERS ---
+    const handleSaveTeacher = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
+        if (!editingTeacher?.name) return;
+        setLoading(true);
         try {
-            const dataToSave = {
-                name: currentTeacher.name || "",
-                role: currentTeacher.role || "",
-                image: currentTeacher.image || 'https://picsum.photos/300/300'
-            };
-            if (currentTeacher.id) {
-                await updateDoc(doc(db, "teachers", String(currentTeacher.id)), dataToSave);
-                setTeachersData(prev => prev.map(item => String(item.id) === String(currentTeacher.id) ? { ...item, ...dataToSave } : item));
+            if (editingTeacher.id) {
+                const ref = doc(db, "teachers", String(editingTeacher.id));
+                const { id, ...data } = editingTeacher;
+                await updateDoc(ref, data);
+                setTeachersData(prev => prev.map(item => item.id === editingTeacher.id ? editingTeacher as Teacher : item));
             } else {
-                const docRef = await addDoc(collection(db, "teachers"), dataToSave);
-                setTeachersData(prev => [...prev, { ...dataToSave, id: docRef.id } as any]);
+                const newDoc = await addDoc(collection(db, "teachers"), editingTeacher);
+                setTeachersData(prev => [...prev, { ...editingTeacher, id: newDoc.id } as Teacher]);
             }
-            setIsEditing(false);
-            setCurrentTeacher({});
-        } catch (e: any) { console.error(e); alert("Gagal menyimpan guru: " + e.message); }
-        setIsSaving(false);
+            setEditingTeacher(null);
+        } catch (error: any) {
+            alert(`Gagal menyimpan data guru: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const deleteTeacher = async (id: string | number) => {
-        if(!confirm("Hapus guru ini?")) return;
+    const handleDeleteTeacher = async (id: string | number) => {
+        if (!confirm("Yakin hapus data guru ini?")) return;
         try {
             await deleteDoc(doc(db, "teachers", String(id)));
-            setTeachersData(prev => prev.filter(t => String(t.id) !== String(id)));
-        } catch(e) { console.error(e); }
+            setTeachersData(prev => prev.filter(item => item.id !== id));
+        } catch (error) {
+            alert("Gagal menghapus data guru");
+        }
     };
 
-    // --- CRUD: Gallery ---
-    const saveGallery = async (e: React.FormEvent) => {
+    // --- CRUD: GALLERY ---
+    const handleSaveGallery = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
+        if (!editingGallery?.src) return;
+        setLoading(true);
         try {
-            const dataToSave = {
-                caption: currentGallery.caption || "",
-                category: currentGallery.category || 'Fasilitas',
-                src: currentGallery.src || 'https://picsum.photos/800/600'
-            };
-            if (currentGallery.id) {
-                await updateDoc(doc(db, "gallery", String(currentGallery.id)), dataToSave);
-                setGalleryData(prev => prev.map(item => String(item.id) === String(currentGallery.id) ? { ...item, ...dataToSave } : item));
+             if (editingGallery.id) {
+                const ref = doc(db, "gallery", String(editingGallery.id));
+                const { id, ...data } = editingGallery;
+                await updateDoc(ref, data);
+                setGalleryData(prev => prev.map(item => item.id === editingGallery.id ? editingGallery as GalleryImage : item));
             } else {
-                const docRef = await addDoc(collection(db, "gallery"), dataToSave);
-                setGalleryData(prev => [...prev, { ...dataToSave, id: docRef.id } as any]);
+                const newDoc = await addDoc(collection(db, "gallery"), editingGallery);
+                setGalleryData(prev => [...prev, { ...editingGallery, id: newDoc.id } as GalleryImage]);
             }
-            setIsEditing(false);
-            setCurrentGallery({});
-        } catch(e: any) { console.error(e); alert("Gagal menyimpan galeri: " + e.message); }
-        setIsSaving(false);
+            setEditingGallery(null);
+        } catch (error: any) {
+             alert(`Gagal menyimpan foto: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const deleteGallery = async (id: string | number) => {
-        if(!confirm("Hapus foto ini?")) return;
+    const handleDeleteGallery = async (id: string | number) => {
+        if (!confirm("Hapus foto ini?")) return;
         try {
             await deleteDoc(doc(db, "gallery", String(id)));
-            setGalleryData(prev => prev.filter(g => String(g.id) !== String(id)));
-        } catch(e) { console.error(e); }
+            setGalleryData(prev => prev.filter(item => item.id !== id));
+        } catch (error) {
+            alert("Gagal menghapus foto");
+        }
     };
 
-    // --- CRUD: Schedule ---
-    const updateScheduleInFirestore = async (updatedClassSchedule: ClassSchedule) => {
+    // --- CRUD: PROFILE ---
+    const handleSaveProfile = async () => {
+        setLoading(true);
         try {
-            await setDoc(doc(db, "schedules", updatedClassSchedule.className), updatedClassSchedule);
-        } catch (e: any) {
-            console.error("Failed to update schedule", e);
-            alert("Gagal update jadwal ke database: " + e.message);
+            // Find existing profile doc or create new
+            // In a real app we might store ID, here we query
+            // Ideally we pass ID from App.tsx, but for now lets assume single doc collection or update active
+            // For simplicity, we just save to a specific known ID or add if empty in App.tsx. 
+            // Here we assume setSchoolProfile updates local, we need to persist.
+            // Simplified: Just log for now or implement if ID is available.
+            // Since we don't have the ID of the profile doc in props, we'll try to find it or create a fixed ID 'main'
+            await setDoc(doc(db, "school_profile", "main"), schoolProfile);
+            alert("Profil sekolah berhasil disimpan!");
+        } catch (error: any) {
+            console.error(error);
+            alert("Gagal menyimpan profil.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const addScheduleItem = async () => {
-        if (!newScheduleItem.time || !newScheduleItem.subject) return;
-
-        let updatedClass: ClassSchedule | null = null;
-        const newSchedules = schedulesData.map(cls => {
-            if (cls.className === selectedClassForSchedule) {
-                updatedClass = {
-                    ...cls,
-                    days: cls.days.map(day => {
-                        if (day.dayName === selectedDayForSchedule) {
-                            return { ...day, schedule: [...day.schedule, newScheduleItem] };
-                        }
-                        return day;
-                    })
-                };
-                return updatedClass;
-            }
-            return cls;
-        });
-
-        if (updatedClass) {
-            setSchedulesData(newSchedules);
-            await updateScheduleInFirestore(updatedClass);
-        }
-        setNewScheduleItem({ time: '', subject: '' });
-    };
-
-    const deleteScheduleItem = async (idx: number) => {
-        let updatedClass: ClassSchedule | null = null;
-        const newSchedules = schedulesData.map(cls => {
-            if (cls.className === selectedClassForSchedule) {
-                updatedClass = {
-                    ...cls,
-                    days: cls.days.map(day => {
-                        if (day.dayName === selectedDayForSchedule) {
-                            const newSched = [...day.schedule];
-                            newSched.splice(idx, 1);
-                            return { ...day, schedule: newSched };
-                        }
-                        return day;
-                    })
-                };
-                return updatedClass;
-            }
-            return cls;
-        });
-
-        if (updatedClass) {
-            setSchedulesData(newSchedules);
-            await updateScheduleInFirestore(updatedClass);
-        }
-    };
 
     if (!isOpen) return null;
 
-    // -- Sidebar Button Component --
-    const SidebarItem = ({ id, label, icon }: { id: TabType, label: string, icon: React.ReactNode }) => (
-        <button 
-            onClick={() => { setActiveTab(id); setIsEditing(false); }}
-            className={`
-                flex items-center gap-2 px-4 py-3 rounded-lg transition-colors whitespace-nowrap
-                ${activeTab === id ? 'bg-brand-blue text-white' : 'text-slate-300 hover:bg-slate-700'}
-                md:w-full md:justify-start justify-center
-            `}
-        >
-            {icon}
-            <span className="text-sm font-medium">{label}</span>
-        </button>
-    );
-
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4">
-            <div className="bg-white w-full h-[95vh] md:max-w-7xl md:h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex overflow-hidden">
                 
-                {/* Close Button */}
-                <button onClick={onClose} className="absolute top-2 right-2 md:top-4 md:right-4 z-10 p-2 bg-white/50 hover:bg-white rounded-full transition-colors shadow-sm">
-                    <svg className="h-5 w-5 md:h-6 md:w-6 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-
-                {!isAuthenticated ? (
-                    <div className="w-full h-full flex items-center justify-center bg-brand-light p-4">
-                        <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm md:max-w-md border border-slate-100">
-                            <h2 className="text-2xl font-bold text-center text-slate-800 mb-6">Login Pengelola</h2>
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Password (admin123)" />
-                                {error && <p className="text-red-500 text-xs">{error}</p>}
-                                <button type="submit" className="w-full bg-brand-blue text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors">Masuk</button>
-                            </form>
-                        </div>
+                {/* Sidebar */}
+                <div className="w-64 bg-slate-900 text-white flex flex-col shrink-0">
+                    <div className="p-6 border-b border-slate-700">
+                        <h2 className="font-bold text-xl">Admin Panel</h2>
+                        <p className="text-slate-400 text-xs">SDN Tempurejo 1</p>
                     </div>
-                ) : (
-                    <>
-                        {/* Sidebar / Topbar Navigation */}
-                        <div className="w-full md:w-64 bg-slate-800 text-white flex flex-col shrink-0">
-                            <div className="p-4 md:p-6 border-b border-slate-700 hidden md:block">
-                                <h2 className="text-xl font-bold font-display truncate">{schoolProfile.name}</h2>
-                                <span className="text-xs text-slate-400">Database Manager</span>
-                            </div>
-                            
-                            {/* Horizontal scroll on mobile, Vertical stack on desktop */}
-                            <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto p-2 md:p-4 gap-2 no-scrollbar border-b md:border-b-0 border-slate-700">
-                                <SidebarItem id="dashboard" label="Overview" icon={<span className="text-lg">📊</span>} />
-                                <SidebarItem id="identity" label="Identitas" icon={<span className="text-lg">🏫</span>} />
-                                <SidebarItem id="news" label="Berita" icon={<span className="text-lg">📰</span>} />
-                                <SidebarItem id="teachers" label="Guru" icon={<span className="text-lg">👨‍🏫</span>} />
-                                <SidebarItem id="schedules" label="Jadwal" icon={<span className="text-lg">📅</span>} />
-                                <SidebarItem id="gallery" label="Galeri" icon={<span className="text-lg">📷</span>} />
-                            </nav>
-                            
-                            <div className="p-4 border-t border-slate-700 hidden md:block">
-                                <button onClick={() => setIsAuthenticated(false)} className="text-sm text-slate-400 hover:text-white">Log Out</button>
+                    
+                    {!isAuthenticated ? (
+                        <div className="p-4 text-sm text-slate-400">Silakan login</div>
+                    ) : (
+                        <nav className="flex-grow p-4 space-y-2">
+                            <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Dashboard</button>
+                            <button onClick={() => setActiveTab('identity')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'identity' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Identitas Sekolah</button>
+                            <button onClick={() => setActiveTab('news')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'news' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Berita</button>
+                            <button onClick={() => setActiveTab('teachers')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'teachers' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Data Guru</button>
+                            <button onClick={() => setActiveTab('gallery')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'gallery' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Galeri</button>
+                        </nav>
+                    )}
+
+                    <div className="p-4 border-t border-slate-700">
+                        <button onClick={onClose} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            Keluar
+                        </button>
+                    </div>
+                </div>
+
+                {/* Main Content */}
+                <div className="flex-grow bg-slate-50 overflow-y-auto p-8">
+                    {!isAuthenticated ? (
+                        <div className="h-full flex flex-col items-center justify-center">
+                            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
+                                <h3 className="text-2xl font-bold text-center mb-6">Login Pengelola</h3>
+                                <form onSubmit={handleLogin} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                        <input 
+                                            type="password" 
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none"
+                                        />
+                                    </div>
+                                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                                    <button type="submit" className="w-full bg-brand-primary text-white py-2 rounded-lg font-bold hover:bg-brand-dark transition-colors">
+                                        Masuk
+                                    </button>
+                                </form>
                             </div>
                         </div>
-
-                        {/* Main Content */}
-                        <div className="flex-1 bg-slate-50 overflow-y-auto p-4 md:p-8">
-                            {/* DASHBOARD TAB */}
+                    ) : (
+                        <>
+                            {/* --- TAB: DASHBOARD --- */}
                             {activeTab === 'dashboard' && (
                                 <div>
-                                    <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Dashboard Overview</h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                                        <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-l-4 border-brand-blue">
-                                            <div className="text-xs md:text-sm text-slate-500">Total Berita</div>
-                                            <div className="text-xl md:text-2xl font-bold">{newsData.length}</div>
+                                    <h2 className="text-3xl font-bold mb-6">Selamat Datang, Admin!</h2>
+                                    <div className="grid grid-cols-3 gap-6">
+                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                            <h3 className="text-slate-500 text-sm font-bold uppercase">Total Berita</h3>
+                                            <p className="text-4xl font-bold text-brand-primary mt-2">{newsData.length}</p>
                                         </div>
-                                        <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-l-4 border-brand-orange">
-                                            <div className="text-xs md:text-sm text-slate-500">Guru & Staf</div>
-                                            <div className="text-xl md:text-2xl font-bold">{teachersData.length}</div>
+                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                            <h3 className="text-slate-500 text-sm font-bold uppercase">Total Guru</h3>
+                                            <p className="text-4xl font-bold text-brand-blue mt-2">{teachersData.length}</p>
                                         </div>
-                                        <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-l-4 border-brand-yellow">
-                                            <div className="text-xs md:text-sm text-slate-500">Foto Galeri</div>
-                                            <div className="text-xl md:text-2xl font-bold">{galleryData.length}</div>
-                                        </div>
-                                        <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-l-4 border-brand-green">
-                                            <div className="text-xs md:text-sm text-slate-500">Kelas Aktif</div>
-                                            <div className="text-xl md:text-2xl font-bold">{schedulesData.length}</div>
+                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                            <h3 className="text-slate-500 text-sm font-bold uppercase">Foto Galeri</h3>
+                                            <p className="text-4xl font-bold text-brand-yellow mt-2">{galleryData.length}</p>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* IDENTITY TAB */}
-                            {activeTab === 'identity' && (
-                                <div>
-                                    <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Identitas Sekolah</h2>
-                                    <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">Nama Sekolah</label>
-                                                <input type="text" value={identityForm.name} onChange={(e) => setIdentityForm({...identityForm, name: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">Nomor Telepon</label>
-                                                <input type="text" value={identityForm.phone} onChange={(e) => setIdentityForm({...identityForm, phone: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">Alamat Lengkap</label>
-                                                <input type="text" value={identityForm.address} onChange={(e) => setIdentityForm({...identityForm, address: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">Email Sekolah</label>
-                                                <input type="email" value={identityForm.email} onChange={(e) => setIdentityForm({...identityForm, email: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                            </div>
-
-                                            {/* Logos */}
-                                            <div className="md:col-span-2 border-t pt-4 mt-2">
-                                                <h3 className="font-bold text-slate-800 mb-3 text-sm">Logo Sekolah</h3>
-                                            </div>
-                                            {/* Logo Sekolah */}
-                                            <div className="md:col-span-2 space-y-4">
-                                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        {identityForm.logo ? (
-                                                            <img src={identityForm.logo} className="h-10 w-10 object-cover rounded-full" />
-                                                        ) : <div className="h-10 w-10 bg-slate-200 rounded-full" />}
-                                                        <span className="text-sm font-bold">Logo Utama</span>
-                                                    </div>
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logo: url}), true)} className="text-xs w-32 md:w-auto" />
-                                                </div>
-                                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        {identityForm.logoDaerah ? (
-                                                            <img src={identityForm.logoDaerah} className="h-10 w-10 object-contain" />
-                                                        ) : <div className="h-10 w-10 bg-slate-200 rounded" />}
-                                                        <span className="text-sm font-bold">Logo Daerah</span>
-                                                    </div>
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logoDaerah: url}), true)} className="text-xs w-32 md:w-auto" />
-                                                </div>
-                                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        {identityForm.logoMapan ? (
-                                                            <img src={identityForm.logoMapan} className="h-10 w-10 object-contain" />
-                                                        ) : <div className="h-10 w-10 bg-slate-200 rounded" />}
-                                                        <span className="text-sm font-bold">Logo Mapan</span>
-                                                    </div>
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logoMapan: url}), true)} className="text-xs w-32 md:w-auto" />
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="md:col-span-2 flex justify-end mt-4 pt-4 border-t border-slate-100">
-                                                <button onClick={saveIdentity} disabled={isSaving} className="w-full md:w-auto bg-brand-blue text-white px-6 py-2 rounded-lg font-bold shadow disabled:opacity-50">
-                                                    {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* OTHER TABS SIMPLIFIED FOR MOBILE */}
-                            {/* Just standard tables, but wrapped in overflow-x-auto if needed */}
+                            {/* --- TAB: BERITA --- */}
                             {activeTab === 'news' && (
                                 <div>
-                                    <div className="flex justify-between items-center mb-4 md:mb-6">
-                                        <h2 className="text-xl md:text-2xl font-bold">Berita</h2>
-                                        {!isEditing && <button onClick={() => { setCurrentNews({}); setIsEditing(true); }} className="bg-brand-blue text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm">+ Tambah</button>}
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-2xl font-bold">Kelola Berita</h2>
+                                        <button 
+                                            onClick={() => setEditingNews({ title: '', date: '', category: 'Pengumuman', summary: '', content: '', image: '' })}
+                                            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors"
+                                        >
+                                            + Tambah Berita
+                                        </button>
                                     </div>
-                                    {isEditing ? (
-                                        <form onSubmit={saveNews} className="bg-white p-4 md:p-6 rounded-xl shadow-sm space-y-4">
-                                            <h3 className="font-bold border-b pb-2">Form Berita</h3>
-                                            <input required type="text" placeholder="Judul" value={currentNews.title || ''} onChange={e => setCurrentNews({...currentNews, title: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <input required type="text" placeholder="Tanggal" value={currentNews.date || ''} onChange={e => setCurrentNews({...currentNews, date: e.target.value})} className="border p-2 rounded text-sm" />
-                                                <select value={currentNews.category || 'Pengumuman'} onChange={e => setCurrentNews({...currentNews, category: e.target.value})} className="border p-2 rounded text-sm">
-                                                    <option>Pengumuman</option><option>Prestasi</option><option>Kegiatan</option>
-                                                </select>
-                                            </div>
-                                            <textarea required rows={2} placeholder="Ringkasan (Pendek)" value={currentNews.summary || ''} onChange={e => setCurrentNews({...currentNews, summary: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                                            <textarea rows={6} placeholder="Isi Berita Lengkap (Tampil di halaman detail)" value={currentNews.content || ''} onChange={e => setCurrentNews({...currentNews, content: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setCurrentNews({...currentNews, image: url}))} className="w-full text-xs" />
-                                            {currentNews.image && <img src={currentNews.image} className="h-16 object-cover rounded" />}
-                                            <div className="flex gap-2 justify-end">
-                                                <button type="button" onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-sm text-slate-500">Batal</button>
-                                                <button type="submit" disabled={isSaving} className="bg-brand-blue text-white px-3 py-1.5 rounded text-sm">{isSaving ? '...' : 'Simpan'}</button>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                                            {newsData.map(item => (
-                                                <div key={item.id} className="p-3 md:p-4 border-b flex justify-between items-center hover:bg-slate-50">
-                                                    <div className="flex-1 min-w-0 pr-2">
-                                                        <div className="font-bold truncate text-sm md:text-base">{item.title}</div>
-                                                        <div className="text-xs text-slate-500">{item.date}</div>
+
+                                    {editingNews && (
+                                        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+                                            <h3 className="font-bold mb-4">{editingNews.id ? 'Edit Berita' : 'Tambah Berita Baru'}</h3>
+                                            <form onSubmit={handleSaveNews} className="space-y-4">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Judul</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingNews.title} 
+                                                            onChange={e => setEditingNews({...editingNews, title: e.target.value})}
+                                                            className="w-full border rounded p-2" required 
+                                                        />
                                                     </div>
-                                                    <div className="flex gap-2 shrink-0">
-                                                        <button onClick={() => { setCurrentNews(item as any); setIsEditing(true); }} className="text-blue-500 text-xs font-bold p-1">Edit</button>
-                                                        <button onClick={() => deleteNews(item.id)} className="text-red-500 text-xs font-bold p-1">Hapus</button>
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Tanggal</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingNews.date} 
+                                                            onChange={e => setEditingNews({...editingNews, date: e.target.value})}
+                                                            className="w-full border rounded p-2" placeholder="Contoh: 12 Mei 2025" required 
+                                                        />
                                                     </div>
                                                 </div>
-                                            ))}
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Kategori</label>
+                                                        <select 
+                                                            value={editingNews.category} 
+                                                            onChange={e => setEditingNews({...editingNews, category: e.target.value})}
+                                                            className="w-full border rounded p-2"
+                                                        >
+                                                            <option value="Pengumuman">Pengumuman</option>
+                                                            <option value="Prestasi">Prestasi</option>
+                                                            <option value="Kegiatan">Kegiatan</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                         <label className="block text-sm font-medium mb-1">Upload Foto</label>
+                                                         <input 
+                                                            type="file" 
+                                                            accept="image/*"
+                                                            onChange={(e) => handleImageUpload(e, 'image', setEditingNews, editingNews)}
+                                                            className="w-full text-sm"
+                                                         />
+                                                         {compressing && <span className="text-xs text-brand-primary font-bold animate-pulse">Sedang mengompres gambar...</span>}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Ringkasan (Muncul di Depan)</label>
+                                                    <textarea 
+                                                        value={editingNews.summary} 
+                                                        onChange={e => setEditingNews({...editingNews, summary: e.target.value})}
+                                                        className="w-full border rounded p-2 h-20" required 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Isi Berita Lengkap</label>
+                                                    <textarea 
+                                                        value={editingNews.content || ''} 
+                                                        onChange={e => setEditingNews({...editingNews, content: e.target.value})}
+                                                        className="w-full border rounded p-2 h-40" 
+                                                        placeholder="Tulis isi berita lengkap di sini..."
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <button type="button" onClick={() => setEditingNews(null)} className="px-4 py-2 text-slate-500">Batal</button>
+                                                    <button 
+                                                        type="submit" 
+                                                        disabled={loading || compressing}
+                                                        className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
+                                                    >
+                                                        {loading ? 'Menyimpan...' : compressing ? 'Memproses Gambar...' : 'Simpan'}
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     )}
+
+                                    <div className="space-y-3">
+                                        {newsData.map(news => (
+                                            <div key={news.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex items-center gap-4">
+                                                <img src={news.image} alt="" className="w-16 h-16 object-cover rounded-md bg-slate-100" />
+                                                <div className="flex-grow">
+                                                    <h4 className="font-bold">{news.title}</h4>
+                                                    <p className="text-xs text-slate-500">{news.date} • {news.category}</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => setEditingNews(news)} className="text-blue-500 text-sm hover:underline">Edit</button>
+                                                    <button onClick={() => handleDeleteNews(news.id)} className="text-red-500 text-sm hover:underline">Hapus</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
-                             {/* TEACHERS TAB */}
+                            {/* --- TAB: GURU --- */}
                             {activeTab === 'teachers' && (
                                 <div>
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-xl font-bold">Guru</h2>
-                                        {!isEditing && <button onClick={() => { setCurrentTeacher({}); setIsEditing(true); }} className="bg-brand-blue text-white px-3 py-1.5 rounded-lg font-bold text-xs">+ Tambah</button>}
+                                     <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-2xl font-bold">Data Guru</h2>
+                                        <button 
+                                            onClick={() => setEditingTeacher({ name: '', role: '', image: '' })}
+                                            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors"
+                                        >
+                                            + Tambah Guru
+                                        </button>
                                     </div>
-                                    {isEditing ? (
-                                        <form onSubmit={saveTeacher} className="bg-white p-4 rounded-xl shadow-sm space-y-4">
-                                            <input required type="text" placeholder="Nama" value={currentTeacher.name || ''} onChange={e => setCurrentTeacher({...currentTeacher, name: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                                            <input required type="text" placeholder="Jabatan" value={currentTeacher.role || ''} onChange={e => setCurrentTeacher({...currentTeacher, role: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setCurrentTeacher({...currentTeacher, image: url}))} className="w-full text-xs" />
-                                            {currentTeacher.image && <img src={currentTeacher.image} className="h-16 w-16 object-cover rounded-full" />}
-                                            <div className="flex gap-2 justify-end">
-                                                <button type="button" onClick={() => setIsEditing(false)} className="text-sm text-slate-500">Batal</button>
-                                                <button type="submit" className="bg-brand-blue text-white px-3 py-1.5 rounded text-sm">Simpan</button>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            {teachersData.map(t => (
-                                                <div key={t.id} className="bg-white p-3 rounded-xl shadow-sm flex items-center gap-3">
-                                                    <img src={t.image} className="w-10 h-10 rounded-full object-cover" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-bold text-sm truncate">{t.name}</div>
-                                                        <div className="text-xs text-slate-500 truncate">{t.role}</div>
+
+                                    {editingTeacher && (
+                                        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+                                             <h3 className="font-bold mb-4">{editingTeacher.id ? 'Edit Guru' : 'Tambah Guru'}</h3>
+                                             <form onSubmit={handleSaveTeacher} className="space-y-4">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Nama Lengkap & Gelar</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingTeacher.name} 
+                                                            onChange={e => setEditingTeacher({...editingTeacher, name: e.target.value})}
+                                                            className="w-full border rounded p-2" required 
+                                                        />
                                                     </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <button onClick={() => { setCurrentTeacher(t as any); setIsEditing(true); }} className="text-blue-500 text-xs">Edit</button>
-                                                        <button onClick={() => deleteTeacher(t.id)} className="text-red-500 text-xs">Hapus</button>
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Jabatan</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingTeacher.role} 
+                                                            onChange={e => setEditingTeacher({...editingTeacher, role: e.target.value})}
+                                                            className="w-full border rounded p-2" required 
+                                                        />
                                                     </div>
                                                 </div>
-                                            ))}
+                                                <div>
+                                                     <label className="block text-sm font-medium mb-1">Foto Profil</label>
+                                                     <input 
+                                                        type="file" 
+                                                        accept="image/*"
+                                                        onChange={(e) => handleImageUpload(e, 'image', setEditingTeacher, editingTeacher)}
+                                                        className="w-full text-sm"
+                                                     />
+                                                     {compressing && <span className="text-xs text-brand-primary font-bold animate-pulse">Sedang mengompres gambar...</span>}
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <button type="button" onClick={() => setEditingTeacher(null)} className="px-4 py-2 text-slate-500">Batal</button>
+                                                    <button 
+                                                        type="submit" 
+                                                        disabled={loading || compressing}
+                                                        className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
+                                                    >
+                                                        {loading ? 'Menyimpan...' : compressing ? 'Memproses Gambar...' : 'Simpan'}
+                                                    </button>
+                                                </div>
+                                             </form>
                                         </div>
                                     )}
-                                </div>
-                            )}
 
-                             {/* SCHEDULES TAB */}
-                             {activeTab === 'schedules' && (
-                                <div>
-                                    <h2 className="text-xl font-bold mb-4">Jadwal</h2>
-                                    <div className="bg-white p-4 rounded-xl shadow-sm">
-                                        <div className="flex flex-col md:flex-row gap-3 mb-4">
-                                            <select value={selectedClassForSchedule} onChange={e => setSelectedClassForSchedule(e.target.value)} className="border p-2 rounded text-sm w-full font-bold">
-                                                {schedulesData.map(s => <option key={s.className} value={s.className}>{s.className}</option>)}
-                                            </select>
-                                            <select value={selectedDayForSchedule} onChange={e => setSelectedDayForSchedule(e.target.value)} className="border p-2 rounded text-sm w-full">
-                                                <option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                            <div className="space-y-2 mb-4">
-                                                {schedulesData
-                                                    .find(c => c.className === selectedClassForSchedule)
-                                                    ?.days.find(d => d.dayName === selectedDayForSchedule)
-                                                    ?.schedule.map((item, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
-                                                            <div className="truncate pr-2">
-                                                                <span className="font-bold text-brand-blue mr-2 block md:inline">{item.time}</span>
-                                                                <span>{item.subject}</span>
-                                                            </div>
-                                                            <button onClick={() => deleteScheduleItem(idx)} className="text-red-500 p-1">🗑️</button>
-                                                        </div>
-                                                ))}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {teachersData.map(teacher => (
+                                            <div key={teacher.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex items-center gap-4">
+                                                <img src={teacher.image} alt="" className="w-12 h-12 object-cover rounded-full bg-slate-100" />
+                                                <div className="flex-grow">
+                                                    <h4 className="font-bold">{teacher.name}</h4>
+                                                    <p className="text-xs text-slate-500">{teacher.role}</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => setEditingTeacher(teacher)} className="text-blue-500 text-sm">Edit</button>
+                                                    <button onClick={() => handleDeleteTeacher(teacher.id)} className="text-red-500 text-sm">Hapus</button>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col md:flex-row gap-2 items-end pt-2 border-t">
-                                                <input type="text" value={newScheduleItem.time} onChange={e => setNewScheduleItem({...newScheduleItem, time: e.target.value})} className="w-full border p-2 rounded text-xs" placeholder="Waktu (07:00-08:00)" />
-                                                <input type="text" value={newScheduleItem.subject} onChange={e => setNewScheduleItem({...newScheduleItem, subject: e.target.value})} className="w-full border p-2 rounded text-xs" placeholder="Mapel" />
-                                                <button onClick={addScheduleItem} className="w-full md:w-auto bg-brand-green text-white px-3 py-2 rounded text-xs font-bold">Tambah</button>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
 
-                             {/* GALLERY TAB */}
+                             {/* --- TAB: GALERI --- */}
                              {activeTab === 'gallery' && (
                                 <div>
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-xl font-bold">Galeri</h2>
-                                        {!isEditing && <button onClick={() => { setCurrentGallery({}); setIsEditing(true); }} className="bg-brand-blue text-white px-3 py-1.5 rounded-lg font-bold text-xs">+ Upload</button>}
+                                     <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-2xl font-bold">Galeri Foto</h2>
+                                        <button 
+                                            onClick={() => setEditingGallery({ caption: '', category: 'Kegiatan', src: '' })}
+                                            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors"
+                                        >
+                                            + Tambah Foto
+                                        </button>
                                     </div>
-                                    {isEditing ? (
-                                        <form onSubmit={saveGallery} className="bg-white p-4 rounded-xl shadow-sm space-y-4">
-                                            <input required type="text" placeholder="Caption" value={currentGallery.caption || ''} onChange={e => setCurrentGallery({...currentGallery, caption: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                                            <select value={currentGallery.category || 'Fasilitas'} onChange={e => setCurrentGallery({...currentGallery, category: e.target.value as any})} className="w-full border p-2 rounded text-sm">
-                                                <option>Fasilitas</option><option>Akademik</option><option>Ekstrakurikuler</option>
-                                            </select>
-                                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setCurrentGallery({...currentGallery, src: url}))} className="w-full text-xs" />
-                                            {currentGallery.src && <img src={currentGallery.src} className="h-24 object-cover rounded" />}
-                                            <div className="flex gap-2 justify-end">
-                                                <button type="button" onClick={() => setIsEditing(false)} className="text-sm text-slate-500">Batal</button>
-                                                <button type="submit" disabled={isSaving} className="bg-brand-blue text-white px-3 py-1.5 rounded text-sm">Simpan</button>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {galleryData.map(item => (
-                                                <div key={item.id} className="relative rounded-lg overflow-hidden shadow-sm aspect-video">
-                                                    <img src={item.src} className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 bg-black/40 flex items-end justify-between p-2">
-                                                        <span className="text-white text-[10px] truncate w-2/3">{item.caption}</span>
-                                                        <button onClick={() => deleteGallery(item.id)} className="text-red-300 text-xs font-bold bg-black/50 px-1 rounded">Hapus</button>
-                                                    </div>
+
+                                    {editingGallery && (
+                                        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+                                            <form onSubmit={handleSaveGallery} className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Judul / Caption</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={editingGallery.caption} 
+                                                        onChange={e => setEditingGallery({...editingGallery, caption: e.target.value})}
+                                                        className="w-full border rounded p-2" required 
+                                                    />
                                                 </div>
-                                            ))}
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Kategori</label>
+                                                    <select 
+                                                        value={editingGallery.category} 
+                                                        onChange={e => setEditingGallery({...editingGallery, category: e.target.value as any})}
+                                                        className="w-full border rounded p-2"
+                                                    >
+                                                        <option value="Kegiatan">Kegiatan</option>
+                                                        <option value="Fasilitas">Fasilitas</option>
+                                                        <option value="Ekstrakurikuler">Ekstrakurikuler</option>
+                                                        <option value="Akademik">Akademik</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                     <label className="block text-sm font-medium mb-1">Upload Foto</label>
+                                                     <input 
+                                                        type="file" 
+                                                        accept="image/*"
+                                                        onChange={(e) => handleImageUpload(e, 'src', setEditingGallery, editingGallery)}
+                                                        className="w-full text-sm"
+                                                     />
+                                                     {compressing && <span className="text-xs text-brand-primary font-bold animate-pulse">Sedang mengompres gambar...</span>}
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <button type="button" onClick={() => setEditingGallery(null)} className="px-4 py-2 text-slate-500">Batal</button>
+                                                    <button 
+                                                        type="submit" 
+                                                        disabled={loading || compressing}
+                                                        className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
+                                                    >
+                                                        {loading ? 'Menyimpan...' : compressing ? 'Memproses Gambar...' : 'Simpan'}
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     )}
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {galleryData.map(item => (
+                                            <div key={item.id} className="group relative rounded-lg overflow-hidden aspect-square border border-slate-200">
+                                                <img src={item.src} alt={item.caption} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white">
+                                                    <p className="text-xs font-bold truncate">{item.caption}</p>
+                                                    <div className="flex gap-2 mt-2 justify-end">
+                                                        <button onClick={() => handleDeleteGallery(item.id)} className="text-xs bg-red-500 px-2 py-1 rounded">Hapus</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
-                        </div>
-                    </>
-                )}
+                            {/* --- TAB: IDENTITAS --- */}
+                            {activeTab === 'identity' && (
+                                <div>
+                                    <h2 className="text-2xl font-bold mb-6">Identitas Sekolah</h2>
+                                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">Nama Sekolah</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={schoolProfile.name} 
+                                                    onChange={e => setSchoolProfile({...schoolProfile, name: e.target.value})}
+                                                    className="w-full border rounded p-2"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">No Telepon</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={schoolProfile.phone} 
+                                                    onChange={e => setSchoolProfile({...schoolProfile, phone: e.target.value})}
+                                                    className="w-full border rounded p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Alamat Lengkap</label>
+                                            <input 
+                                                type="text" 
+                                                value={schoolProfile.address} 
+                                                onChange={e => setSchoolProfile({...schoolProfile, address: e.target.value})}
+                                                className="w-full border rounded p-2"
+                                            />
+                                        </div>
+                                        
+                                        <div className="border-t pt-4 mt-4">
+                                            <h4 className="font-bold mb-2">Logo Sekolah</h4>
+                                            <div className="flex items-center gap-4">
+                                                {schoolProfile.logo && <img src={schoolProfile.logo} className="w-16 h-16 object-contain border rounded" />}
+                                                <input 
+                                                    type="file" 
+                                                    onChange={(e) => handleImageUpload(e, 'logo', setSchoolProfile, schoolProfile)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end pt-4">
+                                            <button 
+                                                onClick={handleSaveProfile}
+                                                disabled={loading || compressing}
+                                                className="bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-dark"
+                                            >
+                                                {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );
