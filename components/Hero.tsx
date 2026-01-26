@@ -52,33 +52,39 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white mt-16 md:mt-0 flex flex-col items-center">
         
-        {/* Logos Display (Static, Large, Blended) */}
-        <div className="flex items-center justify-center gap-4 md:gap-10 mb-6 md:mb-10">
+        {/* Logos Display (Static, Large, Blended with Glass Effect) */}
+        <div className="flex items-center justify-center gap-6 md:gap-10 mb-8 md:mb-12 animate-in fade-in zoom-in duration-1000">
             {/* Logo Daerah (Kiri) */}
             {schoolProfile.logoDaerah && (
-                <img 
-                    src={schoolProfile.logoDaerah} 
-                    alt="Logo Daerah" 
-                    className="w-20 h-20 md:w-32 md:h-32 object-contain" 
-                />
+                <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-full p-4 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
+                    <img 
+                        src={schoolProfile.logoDaerah} 
+                        alt="Logo Daerah" 
+                        className="w-full h-full object-contain drop-shadow-md" 
+                    />
+                </div>
             )}
             
             {/* Logo Sekolah (Tengah - Besar) */}
             {schoolProfile.logo && (
-                <img 
-                    src={schoolProfile.logo} 
-                    alt="Logo Sekolah" 
-                    className="w-40 h-40 md:w-72 md:h-72 object-contain" 
-                />
+                <div className="w-40 h-40 md:w-56 md:h-56 bg-white/20 backdrop-blur-xl rounded-full p-6 border-2 border-white/30 shadow-2xl shadow-brand-primary/20 transform hover:scale-105 transition-all duration-500 relative z-10 hover:bg-white/25">
+                     <img 
+                        src={schoolProfile.logo} 
+                        alt="Logo Sekolah" 
+                        className="w-full h-full object-contain drop-shadow-xl" 
+                    />
+                </div>
             )}
 
             {/* Logo Mapan (Kanan) */}
             {schoolProfile.logoMapan && (
-                <img 
-                    src={schoolProfile.logoMapan} 
-                    alt="Logo Mapan" 
-                    className="w-20 h-20 md:w-32 md:h-32 object-contain" 
-                />
+                <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-full p-4 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
+                    <img 
+                        src={schoolProfile.logoMapan} 
+                        alt="Logo Mapan" 
+                        className="w-full h-full object-contain drop-shadow-md" 
+                    />
+                </div>
             )}
         </div>
 

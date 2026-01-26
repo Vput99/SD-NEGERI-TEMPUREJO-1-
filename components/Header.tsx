@@ -34,53 +34,57 @@ const Header: React.FC<HeaderProps> = ({ schoolProfile, onResetView }) => {
 
   return (
     <header 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'pt-4' : 'pt-4 md:pt-8'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'pt-2' : 'pt-4 md:pt-6'}`}
     >
         <div className="container mx-auto px-4 flex justify-center">
           <div className={`
-            rounded-full transition-all duration-300 flex items-center px-6 py-3 gap-4
+            rounded-full transition-all duration-300 flex items-center px-6 md:px-8 py-3 md:py-4 gap-4 md:gap-8
             ${isScrolled 
-              ? 'glass shadow-lg shadow-black/5 bg-white/80' 
-              : 'bg-transparent md:bg-black/20 md:backdrop-blur-sm border border-transparent md:border-white/10'}
+              ? 'glass shadow-lg shadow-black/5 bg-white/90 scale-90 md:scale-95' 
+              : 'bg-black/30 backdrop-blur-md border border-white/10 shadow-2xl'}
           `}>
             
             {/* Logo & Identity Area */}
             <a 
               href="#beranda" 
               onClick={(e) => handleNavClick(e, '#beranda')}
-              className="flex items-center gap-4 group"
+              className="flex items-center gap-4 md:gap-6 group"
             >
-                <div className="flex -space-x-3 items-center">
-                    {/* Logo Sekolah */}
-                    <div className="relative z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white p-1 shadow-md border border-slate-100 transition-transform group-hover:scale-110">
+                <div className="flex items-center gap-3 md:gap-4">
+                    {/* Logo Daerah - Diperbesar */}
+                    {schoolProfile.logoDaerah && (
+                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/95 p-1 shadow-sm border border-slate-100 hidden sm:block hover:scale-110 transition-transform duration-300">
+                            <img src={schoolProfile.logoDaerah} alt="Daerah" className="w-full h-full object-contain" />
+                        </div>
+                    )}
+
+                    {/* Logo Sekolah (Main) - Diperbesar Signifikan */}
+                    <div className="relative z-10 w-14 h-14 md:w-20 md:h-20 rounded-full bg-white p-1.5 shadow-md border border-slate-100 transition-transform duration-300 group-hover:scale-110">
                         {schoolProfile.logo ? (
                             <img src={schoolProfile.logo} alt="Logo" className="w-full h-full object-contain" />
                         ) : (
-                            <div className="w-full h-full bg-brand-primary rounded-full flex items-center justify-center text-white font-bold text-xs">
+                            <div className="w-full h-full bg-brand-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
                                 {schoolProfile.name.substring(0, 2)}
                             </div>
                         )}
                     </div>
-                    {/* Logo Daerah */}
-                    {schoolProfile.logoDaerah && (
-                        <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white p-1 shadow-sm border border-slate-100 hidden sm:block">
-                            <img src={schoolProfile.logoDaerah} alt="Daerah" className="w-full h-full object-contain" />
-                        </div>
-                    )}
-                    {/* Logo Mapan */}
+                    
+                    {/* Logo Mapan - Diperbesar */}
                     {schoolProfile.logoMapan && (
-                        <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white p-1 shadow-sm border border-slate-100 hidden sm:block">
+                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/95 p-1 shadow-sm border border-slate-100 hidden sm:block hover:scale-110 transition-transform duration-300">
                             <img src={schoolProfile.logoMapan} alt="Mapan" className="w-full h-full object-contain" />
                         </div>
                     )}
                 </div>
 
-                <div className="flex flex-col">
-                   <span className={`font-display font-bold text-base md:text-xl leading-none tracking-tight ${isScrolled ? 'text-brand-dark' : 'text-white md:drop-shadow-md'}`}>
+                <div className="flex flex-col border-l border-white/20 pl-4 md:pl-6">
+                   {/* Nama Sekolah - Font lebih besar */}
+                   <span className={`font-display font-bold text-lg md:text-3xl leading-none tracking-tight ${isScrolled ? 'text-brand-dark' : 'text-white drop-shadow-md'}`}>
                         {schoolProfile.name}
                    </span>
-                   <span className={`text-[10px] md:text-xs font-medium uppercase tracking-wider ${isScrolled ? 'text-brand-primary' : 'text-slate-200'}`}>
-                        Sekolah Penggerak
+                   {/* Subtitle - Font lebih besar */}
+                   <span className={`text-xs md:text-sm font-bold uppercase tracking-wider mt-1 ${isScrolled ? 'text-brand-primary' : 'text-brand-yellow drop-shadow-sm'}`}>
+                        Sekolah Adiwiyata
                    </span>
                 </div>
             </a>
