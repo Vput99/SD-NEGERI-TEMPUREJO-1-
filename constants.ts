@@ -1,10 +1,10 @@
 
 import { NavItem, Teacher, NewsItem, ClassSchedule, GalleryImage } from './types';
 
-export const SCHOOL_NAME = "SD Negeri Tempurejo 1";
-export const SCHOOL_ADDRESS = "Jl. Raya Tempurejo No. 1, Jawa Timur"; // Alamat default, bisa diubah di Admin
-export const SCHOOL_PHONE = "(0331) 123-4567";
-export const SCHOOL_EMAIL = "info@sdntempurejo1.sch.id";
+export const SCHOOL_NAME = "SD Negeri Tempurejo 1 Kota Kediri";
+export const SCHOOL_ADDRESS = "Jl. Tempurejo, Kec. Pesantren, Kota Kediri, Jawa Timur"; 
+export const SCHOOL_PHONE = "(0354) 123-4567";
+export const SCHOOL_EMAIL = "info@sdntempurejo1kediri.sch.id";
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Beranda", href: "#beranda" },
@@ -36,11 +36,11 @@ export const NEWS: NewsItem[] = [
   },
   {
     id: 2,
-    title: "Juara 1 Lomba Menggambar Tingkat Kota",
+    title: "Juara 1 Lomba Menggambar Tingkat Kota Kediri",
     date: "24 April 2024",
     category: "Prestasi",
     summary: "Selamat kepada Ananda Rizky dari Kelas 4B atas prestasinya yang membanggakan.",
-    content: "Keluarga besar sekolah mengucapkan selamat yang sebesar-besarnya kepada Ananda Rizky dari Kelas 4B yang berhasil menyabet Juara 1 dalam Lomba Menggambar Tingkat Kota yang diselenggarakan oleh Dinas Pendidikan. \n\nKarya Rizky yang bertema 'Lingkungan Hijau' berhasil memukau juri. Semoga prestasi ini dapat memotivasi siswa-siswa lain untuk terus berkarya dan berprestasi.",
+    content: "Keluarga besar sekolah mengucapkan selamat yang sebesar-besarnya kepada Ananda Rizky dari Kelas 4B yang berhasil menyabet Juara 1 dalam Lomba Menggambar Tingkat Kota yang diselenggarakan oleh Dinas Pendidikan Kota Kediri. \n\nKarya Rizky yang bertema 'Lingkungan Hijau' berhasil memukau juri. Semoga prestasi ini dapat memotivasi siswa-siswa lain untuk terus berkarya dan berprestasi.",
     image: "https://picsum.photos/id/180/600/400"
   },
   {

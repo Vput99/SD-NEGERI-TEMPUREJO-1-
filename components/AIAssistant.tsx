@@ -9,7 +9,7 @@ const AIAssistant: React.FC = () => {
     {
       id: 'welcome',
       role: 'model',
-      text: 'Halo! Saya Bu Guru AI. Ada yang bisa saya bantu mengenai SD Harapan Bangsa?',
+      text: 'Halo! Saya Bu Guru AI. Ada yang bisa saya bantu mengenai SD Negeri Tempurejo 1 Kota Kediri?',
       timestamp: new Date()
     }
   ]);

@@ -74,7 +74,7 @@ const NewsDetailPage: React.FC<NewsDetailPageProps> = ({ news, onBack }) => {
             {/* Share / Tags Footer */}
             <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between items-center">
                 <div className="text-sm text-slate-400">
-                    Tag: <span className="text-brand-primary font-bold">#{news.category.toLowerCase()}</span> #sdharapanbangsa
+                    Tag: <span className="text-brand-primary font-bold">#{news.category.toLowerCase()}</span> #sdntempurejo1kediri
                 </div>
                 <div className="flex gap-2">
                     <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors">
