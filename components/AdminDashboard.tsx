@@ -91,8 +91,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     const ctx = canvas.getContext('2d');
                     ctx?.drawImage(img, 0, 0, width, height);
                     
-                    // Kompres ke JPEG kualitas 70%
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    // Gunakan PNG agar transparan
+                    const dataUrl = canvas.toDataURL('image/png');
                     callback(dataUrl);
                 };
             };

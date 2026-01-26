@@ -53,13 +53,13 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white mt-16 md:mt-0 flex flex-col items-center">
         
         {/* Logos Display (Static, Large, Blended) */}
-        <div className="flex items-center justify-center gap-4 md:gap-8 mb-6 md:mb-8">
+        <div className="flex items-center justify-center gap-4 md:gap-10 mb-6 md:mb-10">
             {/* Logo Daerah (Kiri) */}
             {schoolProfile.logoDaerah && (
                 <img 
                     src={schoolProfile.logoDaerah} 
                     alt="Logo Daerah" 
-                    className="w-16 h-16 md:w-24 md:h-24 object-contain drop-shadow-xl" 
+                    className="w-20 h-20 md:w-32 md:h-32 object-contain" 
                 />
             )}
             
@@ -68,7 +68,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
                 <img 
                     src={schoolProfile.logo} 
                     alt="Logo Sekolah" 
-                    className="w-28 h-28 md:w-48 md:h-48 object-contain drop-shadow-2xl" 
+                    className="w-40 h-40 md:w-72 md:h-72 object-contain" 
                 />
             )}
 
@@ -77,7 +77,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
                 <img 
                     src={schoolProfile.logoMapan} 
                     alt="Logo Mapan" 
-                    className="w-16 h-16 md:w-24 md:h-24 object-contain drop-shadow-xl" 
+                    className="w-20 h-20 md:w-32 md:h-32 object-contain" 
                 />
             )}
         </div>
