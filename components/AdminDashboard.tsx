@@ -64,17 +64,39 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
-    // --- File Upload Helper ---
+    // --- File Upload Helper (With Auto Compression) ---
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
-                    callback(reader.result);
-                }
-            };
             reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    // Batasi lebar maksimal 600px agar size kecil (cukup untuk web)
+                    const MAX_WIDTH = 600;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height = height * (MAX_WIDTH / width);
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    
+                    // Kompres ke JPEG kualitas 70%
+                    // Ini mengubah gambar 2MB menjadi sekitar 50-100KB (Aman untuk Firestore)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    callback(dataUrl);
+                };
+            };
         }
     };
 
@@ -110,7 +132,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             alert('Data identitas sekolah berhasil disimpan!');
         } catch (e: any) {
             console.error(e);
-            alert("Gagal menyimpan: " + (e.message || "Terjadi kesalahan tidak diketahui. Cek Rules Firebase."));
+            alert("Gagal menyimpan: " + (e.message || "Terjadi kesalahan."));
         }
         setIsSaving(false);
     };
