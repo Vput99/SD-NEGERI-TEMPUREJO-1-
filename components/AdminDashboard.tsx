@@ -65,9 +65,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     // --- File Upload Helper (With Auto Compression) ---
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void, isLogo: boolean = false) => {
         const file = e.target.files?.[0];
         if (file) {
+            // Check initial file size (e.g. warn if > 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                 alert("Ukuran file asli terlalu besar (>5MB). Mohon pilih file yang lebih kecil.");
+                 return;
+            }
+
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (event) => {
@@ -75,25 +81,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 img.src = event.target?.result as string;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // Batasi lebar maksimal 600px agar size kecil (cukup untuk web)
-                    const MAX_WIDTH = 600;
+                    
+                    // Optimization Settings (Aggressive compression for DB storage)
+                    const MAX_WIDTH = isLogo ? 300 : 640;  // Reduced from 800
+                    const MAX_HEIGHT = isLogo ? 300 : 800; // Add max height constraint
+                    
                     let width = img.width;
                     let height = img.height;
 
-                    if (width > MAX_WIDTH) {
-                        height = height * (MAX_WIDTH / width);
-                        width = MAX_WIDTH;
+                    // Resize logic maintaining aspect ratio
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
                     }
 
                     canvas.width = width;
                     canvas.height = height;
 
                     const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, width, height);
-                    
-                    // Gunakan PNG agar transparan
-                    const dataUrl = canvas.toDataURL('image/png');
-                    callback(dataUrl);
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Use JPEG for photos, PNG for logos (transparency)
+                        const format = isLogo ? 'image/png' : 'image/jpeg';
+                        // Reduce quality to 0.5 (50%) to ensure small file size
+                        const quality = isLogo ? undefined : 0.5; 
+
+                        const dataUrl = canvas.toDataURL(format, quality);
+                        
+                        // Firestore field limit is ~1MB (1,048,487 bytes)
+                        // Safety threshold set to ~600KB to allow room for other fields
+                        const SAFETY_LIMIT = 600000;
+
+                        if (dataUrl.length > SAFETY_LIMIT) {
+                            alert(`Ukuran gambar hasil kompresi masih terlalu besar (${Math.round(dataUrl.length/1024)} KB). Mohon gunakan gambar dengan resolusi lebih rendah.`);
+                        } else {
+                            callback(dataUrl);
+                        }
+                    }
                 };
             };
         }
@@ -144,7 +176,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 date: currentNews.date || "",
                 category: currentNews.category || 'Pengumuman',
                 summary: currentNews.summary || "",
-                content: currentNews.content || "", // Save full content
+                content: currentNews.content || "", 
                 image: currentNews.image || 'https://picsum.photos/600/400'
             };
 
@@ -421,7 +453,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         ) : <div className="h-10 w-10 bg-slate-200 rounded-full" />}
                                                         <span className="text-sm font-bold">Logo Utama</span>
                                                     </div>
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logo: url}))} className="text-xs w-32 md:w-auto" />
+                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logo: url}), true)} className="text-xs w-32 md:w-auto" />
                                                 </div>
                                                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
@@ -430,7 +462,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         ) : <div className="h-10 w-10 bg-slate-200 rounded" />}
                                                         <span className="text-sm font-bold">Logo Daerah</span>
                                                     </div>
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logoDaerah: url}))} className="text-xs w-32 md:w-auto" />
+                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logoDaerah: url}), true)} className="text-xs w-32 md:w-auto" />
                                                 </div>
                                                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
@@ -439,7 +471,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         ) : <div className="h-10 w-10 bg-slate-200 rounded" />}
                                                         <span className="text-sm font-bold">Logo Mapan</span>
                                                     </div>
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logoMapan: url}))} className="text-xs w-32 md:w-auto" />
+                                                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setIdentityForm({...identityForm, logoMapan: url}), true)} className="text-xs w-32 md:w-auto" />
                                                 </div>
                                             </div>
                                             
