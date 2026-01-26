@@ -125,7 +125,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ teachers, schoolName, o
             
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                 {otherTeachers.map((teacher) => (
-                    <div key={teacher.id} className="group relative bg-white rounded-3xl p-3 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-50">
+                    <div key={teacher.id} className="group relative bg-white rounded-3xl p-3 shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-[1.03] transition-all duration-300 border border-slate-50">
                         <div className="aspect-[4/5] rounded-2xl overflow-hidden mb-3 bg-slate-100">
                             <img 
                                 src={teacher.image} 
