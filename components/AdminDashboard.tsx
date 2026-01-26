@@ -144,6 +144,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 date: currentNews.date || "",
                 category: currentNews.category || 'Pengumuman',
                 summary: currentNews.summary || "",
+                content: currentNews.content || "", // Save full content
                 image: currentNews.image || 'https://picsum.photos/600/400'
             };
 
@@ -470,7 +471,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <option>Pengumuman</option><option>Prestasi</option><option>Kegiatan</option>
                                                 </select>
                                             </div>
-                                            <textarea required rows={3} placeholder="Ringkasan" value={currentNews.summary || ''} onChange={e => setCurrentNews({...currentNews, summary: e.target.value})} className="w-full border p-2 rounded text-sm" />
+                                            <textarea required rows={2} placeholder="Ringkasan (Pendek)" value={currentNews.summary || ''} onChange={e => setCurrentNews({...currentNews, summary: e.target.value})} className="w-full border p-2 rounded text-sm" />
+                                            <textarea rows={6} placeholder="Isi Berita Lengkap (Tampil di halaman detail)" value={currentNews.content || ''} onChange={e => setCurrentNews({...currentNews, content: e.target.value})} className="w-full border p-2 rounded text-sm" />
                                             <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (url) => setCurrentNews({...currentNews, image: url}))} className="w-full text-xs" />
                                             {currentNews.image && <img src={currentNews.image} className="h-16 object-cover rounded" />}
                                             <div className="flex gap-2 justify-end">

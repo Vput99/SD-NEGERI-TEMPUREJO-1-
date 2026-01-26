@@ -10,7 +10,8 @@ import PPDBSection from './components/PPDBSection';
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
 import AdminDashboard from './components/AdminDashboard';
-import AllTeachersPage from './components/AllTeachersPage'; // Import new page
+import AllTeachersPage from './components/AllTeachersPage';
+import NewsDetailPage from './components/NewsDetailPage'; // Import News Detail
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from './types';
 import { db } from './services/firebase';
@@ -19,8 +20,11 @@ import { collection, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
 function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showAllTeachers, setShowAllTeachers] = useState(false); // New state for view switching
   
+  // Navigation State
+  const [showAllTeachers, setShowAllTeachers] = useState(false);
+  const [activeNewsItem, setActiveNewsItem] = useState<NewsItem | null>(null);
+
   // Database States
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>({
     name: SCHOOL_NAME,
@@ -50,7 +54,6 @@ function App() {
         const profileSnap = await getDocs(collection(db, "school_profile"));
         if (!profileSnap.empty) {
             const data = profileSnap.docs[0].data();
-            // Merge with defaults to ensure no undefined values
             setSchoolProfile({
                 name: data.name || SCHOOL_NAME,
                 address: data.address || SCHOOL_ADDRESS,
@@ -66,7 +69,6 @@ function App() {
                 }
             });
         } else {
-            // Seed Profile if empty
             await addDoc(collection(db, "school_profile"), schoolProfile);
         }
 
@@ -76,7 +78,6 @@ function App() {
             const fetchedNews = newsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             setNewsData(fetchedNews);
         } else {
-            // Seed News
             for (const item of NEWS) {
                 const { id, ...data } = item; 
                 await addDoc(collection(db, "news"), data);
@@ -91,7 +92,6 @@ function App() {
             const fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             setTeachersData(fetchedTeachers);
         } else {
-            // Seed Teachers
             for (const item of TEACHERS) {
                 const { id, ...data } = item;
                 await addDoc(collection(db, "teachers"), data);
@@ -106,7 +106,6 @@ function App() {
             const fetchedGallery = gallerySnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             setGalleryData(fetchedGallery);
         } else {
-            // Seed Gallery
             for (const item of GALLERY) {
                 const { id, ...data } = item;
                 await addDoc(collection(db, "gallery"), data);
@@ -121,7 +120,6 @@ function App() {
             const fetchedSchedules = scheduleSnap.docs.map(d => d.data() as ClassSchedule);
             setSchedulesData(fetchedSchedules);
         } else {
-            // Seed Schedules
             for (const item of CLASS_SCHEDULES) {
                 await setDoc(doc(db, "schedules", item.className), item);
             }
@@ -139,6 +137,11 @@ function App() {
     fetchAllData();
   }, []);
 
+  const resetView = () => {
+    setShowAllTeachers(false);
+    setActiveNewsItem(null);
+  };
+
   if (loading) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-brand-light">
@@ -150,41 +153,41 @@ function App() {
     );
   }
 
+  // Determine what to render based on state priority
+  let content;
+  if (activeNewsItem) {
+    content = <NewsDetailPage news={activeNewsItem} onBack={() => { setActiveNewsItem(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />;
+  } else if (showAllTeachers) {
+    content = <AllTeachersPage teachers={teachersData} onBack={() => { setShowAllTeachers(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />;
+  } else {
+    content = (
+      <>
+        <Hero schoolProfile={schoolProfile} />
+        <ProfileSection 
+            teachers={teachersData} 
+            schoolName={schoolProfile.name} 
+            onSeeAllClick={() => { setShowAllTeachers(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        />
+        <NewsSection 
+            newsItems={newsData} 
+            onNewsClick={(news) => setActiveNewsItem(news)}
+        />
+        <ScheduleSection schedules={schedulesData} />
+        <GallerySection galleryItems={galleryData} />
+        <PPDBSection />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col font-body">
       <Header 
         schoolProfile={schoolProfile} 
-        onResetView={() => setShowAllTeachers(false)} 
+        onResetView={resetView} 
       />
       
       <main className="flex-grow">
-        {showAllTeachers ? (
-            <AllTeachersPage 
-                teachers={teachersData} 
-                onBack={() => {
-                    setShowAllTeachers(false);
-                    // Scroll to top when going back
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }} 
-            />
-        ) : (
-            <>
-                <Hero schoolProfile={schoolProfile} />
-                <ProfileSection 
-                    teachers={teachersData} 
-                    schoolName={schoolProfile.name} 
-                    onSeeAllClick={() => {
-                        setShowAllTeachers(true);
-                        // Scroll to top when switching
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                />
-                <NewsSection newsItems={newsData} />
-                <ScheduleSection schedules={schedulesData} />
-                <GallerySection galleryItems={galleryData} />
-                <PPDBSection />
-            </>
-        )}
+        {content}
       </main>
       
       <Footer schoolProfile={schoolProfile} onOpenAdmin={() => setIsAdminOpen(true)} />

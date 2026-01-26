@@ -4,9 +4,10 @@ import { NewsItem } from '../types';
 
 interface NewsSectionProps {
   newsItems: NewsItem[];
+  onNewsClick: (news: NewsItem) => void;
 }
 
-const NewsSection: React.FC<NewsSectionProps> = ({ newsItems }) => {
+const NewsSection: React.FC<NewsSectionProps> = ({ newsItems, onNewsClick }) => {
   // Ambil berita utama (terbaru) dan berita sampingan
   const featuredNews = newsItems[0];
   const sideNews = newsItems.slice(1, 4); // Ambil maks 3 berita lainnya
@@ -22,16 +23,19 @@ const NewsSection: React.FC<NewsSectionProps> = ({ newsItems }) => {
                 <span className="text-brand-primary font-bold tracking-widest uppercase text-sm">Update Terkini</span>
                 <h2 className="font-display text-4xl font-bold text-brand-dark mt-2">Kabar Sekolah</h2>
             </div>
-             <a href="#" className="hidden md:inline-flex px-6 py-2 rounded-full border border-slate-300 font-bold text-slate-600 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all text-sm">
+             <button className="hidden md:inline-flex px-6 py-2 rounded-full border border-slate-300 font-bold text-slate-600 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all text-sm">
                 Lihat Semua Berita
-            </a>
+            </button>
         </div>
 
         {newsItems.length > 0 ? (
             <div className="grid lg:grid-cols-12 gap-8">
                 {/* 1. FEATURED NEWS (LEFT - BIG) */}
                 <div className="lg:col-span-7">
-                    <article className="relative h-[400px] md:h-[500px] rounded-[2rem] overflow-hidden group cursor-pointer shadow-xl">
+                    <article 
+                        onClick={() => onNewsClick(featuredNews)}
+                        className="relative h-[400px] md:h-[500px] rounded-[2rem] overflow-hidden group cursor-pointer shadow-xl transition-transform hover:-translate-y-1"
+                    >
                         <img 
                             src={featuredNews.image} 
                             alt={featuredNews.title} 
@@ -60,7 +64,11 @@ const NewsSection: React.FC<NewsSectionProps> = ({ newsItems }) => {
                 {/* 2. SIDE NEWS (RIGHT - LIST) */}
                 <div className="lg:col-span-5 flex flex-col gap-6">
                     {sideNews.map((item) => (
-                        <article key={item.id} className="flex gap-4 p-4 bg-white rounded-3xl shadow-sm hover:shadow-md transition-all border border-slate-100 group cursor-pointer h-full">
+                        <article 
+                            key={item.id} 
+                            onClick={() => onNewsClick(item)}
+                            className="flex gap-4 p-4 bg-white rounded-3xl shadow-sm hover:shadow-md transition-all border border-slate-100 group cursor-pointer h-full hover:border-brand-primary/30"
+                        >
                             <div className="w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-2xl overflow-hidden">
                                 <img 
                                     src={item.image} 
@@ -82,9 +90,9 @@ const NewsSection: React.FC<NewsSectionProps> = ({ newsItems }) => {
                     ))}
                     
                     {/* View All Button for Mobile */}
-                    <a href="#" className="md:hidden block w-full text-center py-4 rounded-xl bg-white border border-slate-200 font-bold text-brand-primary">
+                    <button className="md:hidden block w-full text-center py-4 rounded-xl bg-white border border-slate-200 font-bold text-brand-primary">
                         Lihat Arsip Berita
-                    </a>
+                    </button>
                 </div>
             </div>
         ) : (

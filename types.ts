@@ -17,6 +17,7 @@ export interface NewsItem {
   date: string;
   category: string;
   summary: string;
+  content?: string; // New field for full article content
   image: string;
 }
 

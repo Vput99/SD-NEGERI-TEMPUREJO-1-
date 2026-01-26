@@ -30,6 +30,7 @@ export const NEWS: NewsItem[] = [
     date: "10 Mei 2024",
     category: "Pengumuman",
     summary: "Segera daftarkan putra-putri Anda! Kuota terbatas untuk gelombang pertama.",
+    content: "Penerimaan Peserta Didik Baru (PPDB) untuk tahun ajaran 2024/2025 telah resmi dibuka. Kami mengundang para orang tua untuk mendaftarkan putra-putrinya di sekolah kami yang mengedepankan pendidikan karakter dan lingkungan. \n\nSyarat Pendaftaran:\n1. Mengisi formulir pendaftaran\n2. Fotokopi Akta Kelahiran\n3. Fotokopi Kartu Keluarga\n\nSegera kunjungi sekretariat kami pada jam kerja untuk informasi lebih lanjut.",
     image: "https://picsum.photos/id/20/600/400"
   },
   {
@@ -38,6 +39,7 @@ export const NEWS: NewsItem[] = [
     date: "24 April 2024",
     category: "Prestasi",
     summary: "Selamat kepada Ananda Rizky dari Kelas 4B atas prestasinya yang membanggakan.",
+    content: "Keluarga besar sekolah mengucapkan selamat yang sebesar-besarnya kepada Ananda Rizky dari Kelas 4B yang berhasil menyabet Juara 1 dalam Lomba Menggambar Tingkat Kota yang diselenggarakan oleh Dinas Pendidikan. \n\nKarya Rizky yang bertema 'Lingkungan Hijau' berhasil memukau juri. Semoga prestasi ini dapat memotivasi siswa-siswa lain untuk terus berkarya dan berprestasi.",
     image: "https://picsum.photos/id/180/600/400"
   },
   {
@@ -46,6 +48,7 @@ export const NEWS: NewsItem[] = [
     date: "15 April 2024",
     category: "Kegiatan",
     summary: "Seluruh warga sekolah berpartisipasi membersihkan lingkungan sekolah.",
+    content: "Dalam rangka menjaga kebersihan dan kenyamanan lingkungan belajar, seluruh warga sekolah mulai dari siswa, guru, hingga staf tata usaha melaksanakan kegiatan Jumat Bersih. \n\nKegiatan dimulai pukul 07.00 WIB dengan membersihkan area kelas, halaman sekolah, dan taman. Kegiatan ini rutin dilakukan untuk menanamkan nilai cinta kebersihan kepada para siswa.",
     image: "https://picsum.photos/id/160/600/400"
   }
 ];
