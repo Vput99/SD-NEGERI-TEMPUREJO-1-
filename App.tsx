@@ -91,18 +91,28 @@ function App() {
         if (!teachersSnap.empty) {
             let fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             
-            // AUTO-FIX: Check if Principal Name in DB is outdated, if so, update it
-            const principalInConstants = TEACHERS.find(t => t.role === "Kepala Sekolah");
-            const principalInDB = fetchedTeachers.find((t: any) => t.role === "Kepala Sekolah");
-            
-            if (principalInConstants && principalInDB && principalInDB.name !== principalInConstants.name) {
-                console.log("Updating Principal Name...");
-                // Update Firestore
-                await updateDoc(doc(db, "teachers", principalInDB.id), { 
-                    name: principalInConstants.name 
-                });
-                // Update Local State
-                principalInDB.name = principalInConstants.name;
+            // SYNC FIX: Ensure DB data matches constants for critical fields (Name, Image)
+            // This fixes the issue where old data (picsum images) persists in Firebase
+            for (const tConstant of TEACHERS) {
+                // Match by Role since IDs are generated in Firebase
+                const tDB = fetchedTeachers.find((t: any) => t.role === tConstant.role);
+                
+                if (tDB) {
+                    // Check if updates are needed
+                    const nameChanged = tDB.name !== tConstant.name;
+                    const imageChanged = tDB.image !== tConstant.image;
+
+                    if (nameChanged || imageChanged) {
+                         console.log(`Syncing teacher data for ${tConstant.role}...`);
+                         await updateDoc(doc(db, "teachers", tDB.id), {
+                             name: tConstant.name,
+                             image: tConstant.image
+                         });
+                         // Update local state to reflect change immediately
+                         tDB.name = tConstant.name;
+                         tDB.image = tConstant.image;
+                    }
+                }
             }
 
             // Sort logic: Put 'Kepala Sekolah' first, then others
