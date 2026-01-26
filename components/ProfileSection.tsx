@@ -5,11 +5,12 @@ import { Teacher } from '../types';
 interface ProfileSectionProps {
   teachers: Teacher[];
   schoolName: string;
+  onSeeAllClick: () => void;
 }
 
-const ProfileSection: React.FC<ProfileSectionProps> = ({ teachers, schoolName }) => {
+const ProfileSection: React.FC<ProfileSectionProps> = ({ teachers, schoolName, onSeeAllClick }) => {
   const principal = teachers[0];
-  const otherTeachers = teachers.slice(1);
+  const otherTeachers = teachers.slice(1, 6); // Limit to 5 items for the preview
 
   return (
     <section id="profil" className="py-24 container mx-auto px-4 relative overflow-hidden bg-white">
@@ -109,11 +110,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ teachers, schoolName })
         <div className="mt-24">
             <div className="flex justify-between items-end mb-10 px-2">
                 <h3 className="font-display text-3xl font-bold text-slate-800">Guru Kami</h3>
-                <a href="#" className="text-sm font-bold text-brand-primary hover:text-brand-dark transition-colors">Lihat Semua &rarr;</a>
+                <button 
+                  onClick={onSeeAllClick}
+                  className="text-sm font-bold text-brand-primary hover:text-brand-dark transition-colors flex items-center gap-1"
+                >
+                  Lihat Semua <span className="text-lg">→</span>
+                </button>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                {otherTeachers.map((teacher, idx) => (
+                {otherTeachers.map((teacher) => (
                     <div key={teacher.id} className="group relative bg-white rounded-3xl p-3 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-50">
                         <div className="aspect-[4/5] rounded-2xl overflow-hidden mb-3 bg-slate-100">
                             <img 

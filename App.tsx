@@ -10,6 +10,7 @@ import PPDBSection from './components/PPDBSection';
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
 import AdminDashboard from './components/AdminDashboard';
+import AllTeachersPage from './components/AllTeachersPage'; // Import new page
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from './types';
 import { db } from './services/firebase';
@@ -18,6 +19,7 @@ import { collection, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
 function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showAllTeachers, setShowAllTeachers] = useState(false); // New state for view switching
   
   // Database States
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>({
@@ -150,14 +152,39 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-body">
-      <Header schoolProfile={schoolProfile} />
+      <Header 
+        schoolProfile={schoolProfile} 
+        onResetView={() => setShowAllTeachers(false)} 
+      />
+      
       <main className="flex-grow">
-        <Hero schoolProfile={schoolProfile} />
-        <ProfileSection teachers={teachersData} schoolName={schoolProfile.name} />
-        <NewsSection newsItems={newsData} />
-        <ScheduleSection schedules={schedulesData} />
-        <GallerySection galleryItems={galleryData} />
-        <PPDBSection />
+        {showAllTeachers ? (
+            <AllTeachersPage 
+                teachers={teachersData} 
+                onBack={() => {
+                    setShowAllTeachers(false);
+                    // Scroll to top when going back
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} 
+            />
+        ) : (
+            <>
+                <Hero schoolProfile={schoolProfile} />
+                <ProfileSection 
+                    teachers={teachersData} 
+                    schoolName={schoolProfile.name} 
+                    onSeeAllClick={() => {
+                        setShowAllTeachers(true);
+                        // Scroll to top when switching
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
+                <NewsSection newsItems={newsData} />
+                <ScheduleSection schedules={schedulesData} />
+                <GallerySection galleryItems={galleryData} />
+                <PPDBSection />
+            </>
+        )}
       </main>
       
       <Footer schoolProfile={schoolProfile} onOpenAdmin={() => setIsAdminOpen(true)} />

@@ -5,9 +5,10 @@ import { SchoolProfile } from '../types';
 
 interface HeaderProps {
   schoolProfile: SchoolProfile;
+  onResetView?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ schoolProfile }) => {
+const Header: React.FC<HeaderProps> = ({ schoolProfile, onResetView }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,16 @@ const Header: React.FC<HeaderProps> = ({ schoolProfile }) => {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLElement>, href: string) => {
-    scrollToSection(e, href);
+    // If we are on a sub-page (like All Teachers), reset to main view first
+    if (onResetView) {
+        onResetView();
+        // Small delay to allow view to render before scrolling
+        setTimeout(() => {
+            scrollToSection(e, href);
+        }, 100);
+    } else {
+        scrollToSection(e, href);
+    }
   };
 
   return (
