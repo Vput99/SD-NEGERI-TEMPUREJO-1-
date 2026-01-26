@@ -5,13 +5,15 @@ import Hero from './components/Hero';
 import ProfileSection from './components/ProfileSection';
 import NewsSection from './components/NewsSection';
 import ScheduleSection from './components/ScheduleSection';
+import ExamSection from './components/ExamSection'; 
+import ExamDetailPage from './components/ExamDetailPage'; // Import New Detail Page
 import GallerySection from './components/GallerySection';
 import PPDBSection from './components/PPDBSection';
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
 import AdminDashboard from './components/AdminDashboard';
 import AllTeachersPage from './components/AllTeachersPage';
-import NewsDetailPage from './components/NewsDetailPage'; // Import News Detail
+import NewsDetailPage from './components/NewsDetailPage'; 
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from './types';
 import { db } from './services/firebase';
@@ -24,6 +26,7 @@ function App() {
   // Navigation State
   const [showAllTeachers, setShowAllTeachers] = useState(false);
   const [activeNewsItem, setActiveNewsItem] = useState<NewsItem | null>(null);
+  const [showExamDetail, setShowExamDetail] = useState(false); // New State for Exam Detail
 
   // Database States
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>({
@@ -191,6 +194,7 @@ function App() {
   const resetView = () => {
     setShowAllTeachers(false);
     setActiveNewsItem(null);
+    setShowExamDetail(false);
   };
 
   if (loading) {
@@ -210,6 +214,8 @@ function App() {
     content = <NewsDetailPage news={activeNewsItem} onBack={() => { setActiveNewsItem(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />;
   } else if (showAllTeachers) {
     content = <AllTeachersPage teachers={teachersData} onBack={() => { setShowAllTeachers(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />;
+  } else if (showExamDetail) {
+    content = <ExamDetailPage onBack={() => { setShowExamDetail(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />;
   } else {
     content = (
       <>
@@ -224,6 +230,7 @@ function App() {
             onNewsClick={(news) => setActiveNewsItem(news)}
         />
         <ScheduleSection schedules={schedulesData} />
+        <ExamSection onOpenDetail={() => { setShowExamDetail(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <GallerySection galleryItems={galleryData} />
         <PPDBSection />
       </>

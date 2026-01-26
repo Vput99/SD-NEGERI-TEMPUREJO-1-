@@ -77,6 +77,7 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
                     <li><a href="#profil" onClick={(e) => scrollToSection(e, '#profil')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Profil Sekolah</a></li>
                     <li><a href="#informasi" onClick={(e) => scrollToSection(e, '#informasi')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Berita</a></li>
                     <li><a href="#jadwal" onClick={(e) => scrollToSection(e, '#jadwal')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Jadwal</a></li>
+                    <li><a href="#ujian" onClick={(e) => scrollToSection(e, '#ujian')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Ujian Akhir</a></li>
                     <li><a href="#galeri" onClick={(e) => scrollToSection(e, '#galeri')} className="hover:text-brand-accent transition-colors flex items-center gap-2 group"><span className="text-brand-primary group-hover:translate-x-1 transition-transform">›</span> Galeri</a></li>
                 </ul>
             </div>
