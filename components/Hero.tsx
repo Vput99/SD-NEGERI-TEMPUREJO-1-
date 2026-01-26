@@ -25,7 +25,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
   }, []);
 
   return (
-    <div id="beranda" className="relative w-full h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
+    <div id="beranda" className="relative w-full h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
       {/* Background Slideshow */}
       {HERO_IMAGES.map((img, index) => (
         <div 
@@ -45,35 +45,35 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
 
       {/* Futuristic Organic Shapes Overlay (Static on top) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-brand-accent/20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-40 right-10 w-48 h-48 bg-brand-blue/20 rounded-full blur-3xl animate-float delay-1000"></div>
+        <div className="absolute top-20 left-10 w-20 h-20 md:w-32 md:h-32 bg-brand-accent/20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-40 right-10 w-32 h-32 md:w-48 md:h-48 bg-brand-blue/20 rounded-full blur-3xl animate-float delay-1000"></div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white">
-        <div className="mb-8 inline-flex items-center gap-2 glass px-6 py-2 rounded-full animate-float shadow-lg border-brand-accent/30">
-            <span className="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></span>
-            <span className="text-brand-light font-bold text-sm uppercase tracking-wider">
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white mt-16 md:mt-0">
+        <div className="mb-6 md:mb-8 inline-flex items-center gap-2 glass px-4 py-1.5 md:px-6 md:py-2 rounded-full animate-float shadow-lg border-brand-accent/30">
+            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-brand-accent animate-pulse"></span>
+            <span className="text-brand-light font-bold text-xs md:text-sm uppercase tracking-wider">
                 Sekolah Adiwiyata
             </span>
         </div>
         
-        <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 drop-shadow-xl leading-tight">
+        <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-6 drop-shadow-xl leading-tight">
           Mewujudkan Generasi <br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-yellow-200">
-            Cerdas & Berbudaya Lingkungan
+            Cerdas & Berbudaya
           </span>
         </h1>
         
-        <p className="font-body text-xl md:text-2xl mb-12 font-light drop-shadow-md text-slate-100 max-w-3xl mx-auto">
-          {schoolProfile.name} hadir dengan konsep pendidikan modern yang menyatu dengan alam, membangun karakter, dan berwawasan masa depan.
+        <p className="font-body text-base sm:text-lg md:text-2xl mb-8 md:mb-12 font-light drop-shadow-md text-slate-100 max-w-3xl mx-auto px-2">
+          {schoolProfile.name} hadir dengan konsep pendidikan modern yang menyatu dengan alam.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-xs sm:max-w-none mx-auto">
           <a 
             href="#profil" 
             onClick={(e) => scrollToSection(e, '#profil')}
-            className="group relative px-8 py-4 rounded-full bg-brand-accent text-brand-dark font-bold text-lg shadow-[0_0_20px_rgba(132,204,22,0.5)] hover:shadow-[0_0_30px_rgba(132,204,22,0.8)] transition-all duration-300 overflow-hidden"
+            className="w-full sm:w-auto group relative px-8 py-3 md:py-4 rounded-full bg-brand-accent text-brand-dark font-bold text-base md:text-lg shadow-[0_0_20px_rgba(132,204,22,0.5)] hover:shadow-[0_0_30px_rgba(132,204,22,0.8)] transition-all duration-300 overflow-hidden"
           >
             <span className="relative z-10">Jelajahi Profil</span>
             <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
@@ -82,7 +82,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
           <a 
             href="#jadwal" 
             onClick={(e) => scrollToSection(e, '#jadwal')}
-            className="group px-8 py-4 rounded-full glass text-white font-bold text-lg hover:bg-white/20 transition-all duration-300 border border-white/30 flex items-center gap-2 justify-center"
+            className="w-full sm:w-auto group px-8 py-3 md:py-4 rounded-full glass text-white font-bold text-base md:text-lg hover:bg-white/20 transition-all duration-300 border border-white/30 flex items-center gap-2 justify-center"
           >
             <span>Lihat Jadwal</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
