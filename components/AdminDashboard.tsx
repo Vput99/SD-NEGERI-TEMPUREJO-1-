@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from '../types';
 import { db } from '../services/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { generateNewsContent } from '../services/geminiService';
 
 interface AdminDashboardProps {
     isOpen: boolean;
@@ -35,6 +36,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [activeTab, setActiveTab] = useState<TabType>('dashboard');
     const [loading, setLoading] = useState(false);
     const [compressing, setCompressing] = useState(false);
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
     // --- FORM STATES ---
     const [editingNews, setEditingNews] = useState<Partial<NewsItem> | null>(null);
@@ -125,6 +127,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             } finally {
                 setCompressing(false);
             }
+        }
+    };
+
+    // --- AI GENERATION ---
+    const handleGenerateAI = async () => {
+        if (!editingNews?.title || !editingNews?.image) {
+            alert("Mohon isi Judul dan Upload Foto terlebih dahulu agar AI bisa menganalisisnya.");
+            return;
+        }
+
+        setIsGeneratingAI(true);
+        try {
+            const result = await generateNewsContent(editingNews.title, editingNews.image);
+            setEditingNews(prev => ({
+                ...prev,
+                summary: result.summary,
+                content: result.content
+            }));
+        } catch (error: any) {
+            alert("Gagal menghasilkan berita dengan AI: " + error.message);
+        } finally {
+            setIsGeneratingAI(false);
         }
     };
 
@@ -406,6 +430,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             value={editingNews.title} 
                                                             onChange={e => setEditingNews({...editingNews, title: e.target.value})}
                                                             className="w-full border rounded p-2" required 
+                                                            placeholder="Contoh: Kegiatan Maulid Nabi 2025"
                                                         />
                                                     </div>
                                                     <div>
@@ -432,7 +457,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         </select>
                                                     </div>
                                                     <div>
-                                                         <label className="block text-sm font-medium mb-1">Upload Foto</label>
+                                                         <label className="block text-sm font-medium mb-1">Upload Foto (Wajib untuk AI)</label>
                                                          <input 
                                                             type="file" 
                                                             accept="image/*"
@@ -442,12 +467,36 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                          {compressing && <span className="text-xs text-brand-primary font-bold animate-pulse">Sedang mengompres gambar...</span>}
                                                     </div>
                                                 </div>
+
+                                                {/* AI GENERATION BUTTON */}
+                                                <div className="flex justify-end border-b border-slate-100 pb-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleGenerateAI}
+                                                        disabled={isGeneratingAI || compressing || !editingNews.title || !editingNews.image}
+                                                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:-translate-y-0.5"
+                                                    >
+                                                        {isGeneratingAI ? (
+                                                            <>
+                                                                <span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
+                                                                <span>Sedang Menulis...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span>✨</span>
+                                                                <span>Buat Isi Berita dengan AI</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+
                                                 <div>
                                                     <label className="block text-sm font-medium mb-1">Ringkasan (Muncul di Depan)</label>
                                                     <textarea 
                                                         value={editingNews.summary} 
                                                         onChange={e => setEditingNews({...editingNews, summary: e.target.value})}
                                                         className="w-full border rounded p-2 h-20" required 
+                                                        placeholder="Ringkasan singkat tentang berita..."
                                                     />
                                                 </div>
                                                 <div>
@@ -456,14 +505,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         value={editingNews.content || ''} 
                                                         onChange={e => setEditingNews({...editingNews, content: e.target.value})}
                                                         className="w-full border rounded p-2 h-40" 
-                                                        placeholder="Tulis isi berita lengkap di sini..."
+                                                        placeholder="Tulis isi berita lengkap di sini (atau gunakan tombol AI di atas)..."
                                                     />
                                                 </div>
                                                 <div className="flex justify-end gap-2">
                                                     <button type="button" onClick={() => setEditingNews(null)} className="px-4 py-2 text-slate-500">Batal</button>
                                                     <button 
                                                         type="submit" 
-                                                        disabled={loading || compressing}
+                                                        disabled={loading || compressing || isGeneratingAI}
                                                         className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
                                                     >
                                                         {loading ? 'Menyimpan...' : compressing ? 'Memproses Gambar...' : 'Simpan'}

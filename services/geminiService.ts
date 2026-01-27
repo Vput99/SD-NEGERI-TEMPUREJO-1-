@@ -53,3 +53,53 @@ export const sendMessageToGemini = async (message: string, history: string[]) =>
     return "Maaf, saat ini Bu Guru sedang sibuk. Silakan coba lagi nanti ya, Nak.";
   }
 };
+
+export const generateNewsContent = async (title: string, imageBase64: string) => {
+  if (!ai) {
+    throw new Error("API Key tidak ditemukan.");
+  }
+
+  try {
+    // Bersihkan header base64 jika ada (data:image/jpeg;base64,...)
+    const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: 'image/jpeg', // Asumsi kompresi di frontend menghasilkan jpeg
+              data: cleanBase64
+            }
+          },
+          {
+            text: `Sebagai Humas SD Negeri Tempurejo 1, buatlah naskah berita website sekolah berdasarkan:
+            1. Judul: "${title}"
+            2. Analisis Gambar yang saya lampirkan.
+            
+            Gaya bahasa: Formal, positif, mendidik, dan jurnalistik khas sekolah.
+            Gunakan Bahasa Indonesia yang baik dan benar (PUEBI).
+            
+            Output harus JSON dengan format:
+            {
+              "summary": "Ringkasan pendek 1-2 kalimat menarik untuk preview (maks 150 karakter).",
+              "content": "Isi berita lengkap minimal 3 paragraf. Paragraf pertama 5W+1H, paragraf kedua detail suasana/analisis gambar, paragraf ketiga harapan/penutup."
+            }`
+          }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    if (response.text) {
+        return JSON.parse(response.text);
+    }
+    throw new Error("Gagal mendapatkan respons dari AI.");
+  } catch (error) {
+    console.error("Gemini Image Analysis Error:", error);
+    throw error;
+  }
+};
