@@ -10,47 +10,62 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
   return (
-    <footer id="kontak" className="bg-[#022c22] text-slate-300 pt-20 pb-10 relative overflow-hidden font-body">
+    <footer id="kontak" className="bg-[#022c22] text-slate-300 pt-24 pb-10 relative overflow-hidden font-body">
        {/* Background pattern opacity */}
        <div className="absolute inset-0 bg-nature-pattern opacity-5 mix-blend-overlay"></div>
+       {/* Gradient Overlay for depth */}
+       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/20 to-transparent pointer-events-none"></div>
 
-      <div className="container mx-auto px-4 relative z-10 mb-12">
+      <div className="container mx-auto px-4 relative z-10 mb-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-y-12 gap-x-8 lg:gap-16">
             
             {/* Column 1: Identity */}
             {/* Full width on Tablet (md), 5 cols on Desktop (lg) */}
-            <div className="md:col-span-12 lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
-                <div className="flex flex-col lg:flex-row items-center gap-5">
-                    {/* Main School Logo */}
-                    <div className="shrink-0 bg-white/5 p-3 rounded-2xl border border-white/10 backdrop-blur-sm shadow-inner">
-                        {schoolProfile.logo ? (
-                            <img src={schoolProfile.logo} alt="Logo Sekolah" className="w-16 h-16 object-contain" />
-                        ) : (
-                            <div className="w-16 h-16 rounded-xl bg-brand-primary flex items-center justify-center text-white font-bold text-2xl">
-                                {schoolProfile.name.substring(0, 2).toUpperCase()}
-                            </div>
-                        )}
+            <div className="md:col-span-12 lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                    {/* Main School Logo with Glow Effect */}
+                    <div className="relative group shrink-0">
+                        <div className="absolute inset-0 bg-brand-primary blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full"></div>
+                        <div className="relative w-20 h-20 md:w-24 md:h-24 bg-white/5 p-4 rounded-full border border-white/10 backdrop-blur-md shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                            {schoolProfile.logo ? (
+                                <img src={schoolProfile.logo} alt="Logo Sekolah" className="w-full h-full object-contain drop-shadow-md" />
+                            ) : (
+                                <div className="w-full h-full rounded-full bg-brand-primary flex items-center justify-center text-white font-bold text-2xl">
+                                    {schoolProfile.name.substring(0, 2).toUpperCase()}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     
-                    <div className="space-y-2">
-                        <h3 className="font-display font-bold text-2xl md:text-3xl text-white leading-none">
-                            {schoolProfile.name}
+                    {/* Typography Redesign */}
+                    <div className="space-y-1">
+                        <span className="block text-brand-secondary font-bold tracking-[0.25em] text-xs md:text-sm uppercase mb-1">
+                            SD Negeri
+                        </span>
+                        <h3 className="font-display font-black text-3xl md:text-5xl text-white leading-none tracking-tight">
+                            Tempurejo 1
                         </h3>
+                        <p className="text-white/50 text-sm font-medium tracking-wide">Kota Kediri, Jawa Timur</p>
+
                         {/* Secondary Logos Row */}
                         {(schoolProfile.logoDaerah || schoolProfile.logoMapan) && (
-                           <div className="flex items-center justify-center lg:justify-start gap-3">
+                           <div className="flex items-center justify-center lg:justify-start gap-4 pt-3">
                                 {schoolProfile.logoDaerah && (
-                                    <img src={schoolProfile.logoDaerah} alt="Logo Daerah" className="h-8 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+                                    <div className="bg-white/5 p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer" title="Pemerintah Kota Kediri">
+                                         <img src={schoolProfile.logoDaerah} alt="Logo Daerah" className="h-8 w-auto object-contain opacity-90 hover:opacity-100" />
+                                    </div>
                                 )}
                                 {schoolProfile.logoMapan && (
-                                    <img src={schoolProfile.logoMapan} alt="Logo Mapan" className="h-8 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+                                    <div className="bg-white/5 p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer" title="Kurikulum Merdeka">
+                                        <img src={schoolProfile.logoMapan} alt="Logo Mapan" className="h-8 w-auto object-contain opacity-90 hover:opacity-100" />
+                                    </div>
                                 )}
                            </div>
                         )}
                     </div>
                 </div>
 
-                <p className="text-slate-400 leading-relaxed max-w-md mx-auto lg:mx-0">
+                <p className="text-slate-400 leading-relaxed max-w-md mx-auto lg:mx-0 border-l-2 border-brand-primary/30 pl-4">
                     Menjadi pelopor sekolah ramah lingkungan yang mengintegrasikan teknologi dan alam untuk membentuk karakter siswa yang unggul, kreatif, dan peduli terhadap kelestarian bumi.
                 </p>
 

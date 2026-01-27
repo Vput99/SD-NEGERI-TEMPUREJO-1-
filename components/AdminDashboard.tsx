@@ -239,12 +239,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setLoading(true);
         try {
             // Find existing profile doc or create new
-            // In a real app we might store ID, here we query
-            // Ideally we pass ID from App.tsx, but for now lets assume single doc collection or update active
-            // For simplicity, we just save to a specific known ID or add if empty in App.tsx. 
-            // Here we assume setSchoolProfile updates local, we need to persist.
-            // Simplified: Just log for now or implement if ID is available.
-            // Since we don't have the ID of the profile doc in props, we'll try to find it or create a fixed ID 'main'
             await setDoc(doc(db, "school_profile", "main"), schoolProfile);
             alert("Profil sekolah berhasil disimpan!");
         } catch (error: any) {
@@ -265,7 +259,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* Sidebar */}
                 <div className="w-64 bg-slate-900 text-white flex flex-col shrink-0">
                     <div className="p-6 border-b border-slate-700">
-                        <h2 className="font-bold text-xl">Admin Panel</h2>
+                        <h2 className="font-bold text-xl tracking-tight">Admin Panel</h2>
                         <p className="text-slate-400 text-xs">SDN Tempurejo 1</p>
                     </div>
                     
@@ -273,16 +267,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div className="p-4 text-sm text-slate-400">Silakan login</div>
                     ) : (
                         <nav className="flex-grow p-4 space-y-2">
-                            <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'dashboard' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Dashboard</button>
-                            <button onClick={() => setActiveTab('identity')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'identity' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Identitas Sekolah</button>
-                            <button onClick={() => setActiveTab('news')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'news' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Berita</button>
-                            <button onClick={() => setActiveTab('teachers')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'teachers' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Data Guru</button>
-                            <button onClick={() => setActiveTab('gallery')} className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'gallery' ? 'bg-brand-primary text-white' : 'hover:bg-slate-800'}`}>Galeri</button>
+                            <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'dashboard' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>📊</span> Dashboard
+                            </button>
+                            <button onClick={() => setActiveTab('identity')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'identity' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>🏫</span> Identitas
+                            </button>
+                            <button onClick={() => setActiveTab('news')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'news' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>📰</span> Berita
+                            </button>
+                            <button onClick={() => setActiveTab('teachers')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'teachers' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>👨‍🏫</span> Guru
+                            </button>
+                            <button onClick={() => setActiveTab('gallery')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'gallery' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>📸</span> Galeri
+                            </button>
                         </nav>
                     )}
 
                     <div className="p-4 border-t border-slate-700">
-                        <button onClick={onClose} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors w-full">
+                        <button onClick={onClose} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors w-full px-4 py-2 hover:bg-red-500/10 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                             Keluar
                         </button>
@@ -293,8 +297,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="flex-grow bg-slate-50 overflow-y-auto p-8">
                     {!isAuthenticated ? (
                         <div className="h-full flex flex-col items-center justify-center">
-                            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
-                                <h3 className="text-2xl font-bold text-center mb-6">Login Pengelola</h3>
+                            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100">
+                                <div className="text-center mb-8">
+                                    <div className="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🔐</div>
+                                    <h3 className="text-2xl font-bold text-slate-800">Login Pengelola</h3>
+                                    <p className="text-slate-500 text-sm mt-1">Masuk untuk mengelola website</p>
+                                </div>
                                 <form onSubmit={handleLogin} className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
@@ -302,12 +310,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             type="password" 
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none"
+                                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-primary focus:border-brand-primary focus:outline-none transition-all"
+                                            placeholder="Masukkan password admin..."
                                         />
                                     </div>
-                                    {error && <p className="text-red-500 text-sm">{error}</p>}
-                                    <button type="submit" className="w-full bg-brand-primary text-white py-2 rounded-lg font-bold hover:bg-brand-dark transition-colors">
-                                        Masuk
+                                    {error && <p className="text-red-500 text-sm bg-red-50 p-2 rounded-lg text-center">{error}</p>}
+                                    <button type="submit" className="w-full bg-brand-primary text-white py-3 rounded-xl font-bold hover:bg-brand-dark transition-all shadow-lg shadow-brand-primary/30">
+                                        Masuk Dashboard
                                     </button>
                                 </form>
                             </div>
@@ -316,20 +325,57 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <>
                             {/* --- TAB: DASHBOARD --- */}
                             {activeTab === 'dashboard' && (
-                                <div>
-                                    <h2 className="text-3xl font-bold mb-6">Selamat Datang, Admin!</h2>
-                                    <div className="grid grid-cols-3 gap-6">
-                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                                            <h3 className="text-slate-500 text-sm font-bold uppercase">Total Berita</h3>
-                                            <p className="text-4xl font-bold text-brand-primary mt-2">{newsData.length}</p>
+                                <div className="animate-in fade-in duration-500">
+                                    <h2 className="text-3xl font-bold mb-2 text-slate-800">Selamat Datang, Admin! 👋</h2>
+                                    <p className="text-slate-500 mb-8">Ringkasan data website sekolah saat ini.</p>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {/* Card 1: Berita */}
+                                        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                            <div className="relative z-10">
+                                                <h3 className="text-emerald-100 text-sm font-bold uppercase tracking-wider mb-1">Total Berita</h3>
+                                                <p className="text-5xl font-black">{newsData.length}</p>
+                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-emerald-50">
+                                                    <span>Terakhir update: Hari ini</span>
+                                                </div>
+                                            </div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">📰</div>
                                         </div>
-                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                                            <h3 className="text-slate-500 text-sm font-bold uppercase">Total Guru</h3>
-                                            <p className="text-4xl font-bold text-brand-blue mt-2">{teachersData.length}</p>
+
+                                        {/* Card 2: Guru */}
+                                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl shadow-lg shadow-blue-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                            <div className="relative z-10">
+                                                <h3 className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-1">Total Guru</h3>
+                                                <p className="text-5xl font-black">{teachersData.length}</p>
+                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-blue-50">
+                                                    <span>Data aktif</span>
+                                                </div>
+                                            </div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">👨‍🏫</div>
                                         </div>
-                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                                            <h3 className="text-slate-500 text-sm font-bold uppercase">Foto Galeri</h3>
-                                            <p className="text-4xl font-bold text-brand-yellow mt-2">{galleryData.length}</p>
+
+                                        {/* Card 3: Galeri */}
+                                        <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl shadow-lg shadow-amber-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                            <div className="relative z-10">
+                                                <h3 className="text-amber-100 text-sm font-bold uppercase tracking-wider mb-1">Foto Galeri</h3>
+                                                <p className="text-5xl font-black">{galleryData.length}</p>
+                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-amber-50">
+                                                    <span>Dokumentasi kegiatan</span>
+                                                </div>
+                                            </div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">📸</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                        <h3 className="font-bold text-slate-800 mb-4">Akses Cepat</h3>
+                                        <div className="flex gap-4">
+                                            <button onClick={() => setActiveTab('news')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
+                                                + Tulis Berita
+                                            </button>
+                                            <button onClick={() => setActiveTab('gallery')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
+                                                + Upload Foto
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
