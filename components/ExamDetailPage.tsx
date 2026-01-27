@@ -5,13 +5,42 @@ interface ExamDetailPageProps {
   onBack: () => void;
 }
 
+const GENERAL_INFO = {
+  id: 'info-umum',
+  name: 'Jadwal & Tata Tertib',
+  icon: '📅',
+  description: 'Informasi pelaksanaan TKA (Tes Kemampuan Akademik) Jenjang SD/MI Tahun 2026. Pelaksanaan Utama dijadwalkan pada rentang 20 - 30 April 2026.',
+  schedule: [
+    { day: "Senin, 20 April 2026", time: "07.30 - 09.30 WIB", mapel: "Literasi (Bahasa Indonesia)" },
+    { day: "Selasa, 21 April 2026", time: "07.30 - 09.30 WIB", mapel: "Numerasi (Matematika)" },
+  ],
+  timeline: [
+      { phase: "Simulasi", date: "2 - 8 Maret 2026" },
+      { phase: "Gladi Bersih", date: "9 - 17 Maret 2026" },
+      { phase: "Pelaksanaan Utama", date: "20 - 30 April 2026" },
+      { phase: "Pengumuman Hasil", date: "24 Mei 2026" }
+  ],
+  requirements: [
+      "Membawa Kartu Peserta Ujian (Wajib).",
+      "Mengenakan seragam sekolah lengkap dan rapi (sesuai hari).",
+      "Membawa alat tulis sendiri (Pensil 2B, Penghapus, Rautan, Penggaris).",
+      "Hadir di lokasi ujian 30 menit sebelum ujian dimulai."
+  ],
+  rules: [
+      "Dilarang membawa alat komunikasi (HP/Smartwatch) ke dalam ruang ujian.",
+      "Dilarang meminjam alat tulis kepada peserta lain selama ujian berlangsung.",
+      "Tas dan buku pelajaran diletakkan di depan kelas saat ujian."
+  ]
+};
+
 // Data Struktur diperkaya dengan Materi Terpetakan & Bank Soal Lengkap (AKM Google Sources)
+// UPDATE: Sesuai arahan Pusmendik, TKA SD Fokus pada Literasi & Numerasi
 const SUBJECT_DATA = [
   {
     id: 'bahasa-indonesia',
-    name: 'Bahasa Indonesia (Literasi)',
+    name: 'Literasi (Bahasa Indonesia)',
     icon: '📖',
-    description: 'Mengukur kompetensi literasi membaca: menemukan informasi, menginterpretasi dan mengintegrasi, serta mengevaluasi dan merefleksi teks.',
+    description: 'Materi Literasi SD/MI: Menemukan informasi, menginterpretasi, serta mengevaluasi teks sastra dan informasi sesuai level kognitif siswa kelas 6.',
     studyGuides: [
         "Menentukan Ide Pokok & Kalimat Utama dalam Paragraf",
         "Menyimpulkan Isi Teks (Laporan, Berita, Pidato)",
@@ -85,9 +114,9 @@ const SUBJECT_DATA = [
   },
   {
     id: 'matematika',
-    name: 'Matematika (Numerasi)',
+    name: 'Numerasi (Matematika)',
     icon: '📐',
-    description: 'Mengukur kemampuan berpikir menggunakan konsep matematika (bilangan, geometri, data) untuk menyelesaikan masalah kehidupan sehari-hari (kontekstual).',
+    description: 'Numerasi Level SD/MI: Mengukur kemampuan berpikir menggunakan konsep bilangan, geometri, dan data untuk masalah kontekstual sehari-hari.',
     studyGuides: [
         "Operasi Hitung Campuran Bilangan Cacah & Bulat",
         "Menghitung FPB & KPK (Soal Cerita)",
@@ -158,7 +187,7 @@ const SUBJECT_DATA = [
 type TabType = 'capaian' | 'distribusi' | 'asesmen';
 
 const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
-  const [selectedSubjectId, setSelectedSubjectId] = useState(SUBJECT_DATA[0].id);
+  const [selectedSubjectId, setSelectedSubjectId] = useState('info-umum'); // Default to General Info
   const [activeTab, setActiveTab] = useState<TabType>('capaian');
 
   // Scroll to top when mounted
@@ -166,7 +195,8 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  const activeSubject = SUBJECT_DATA.find(s => s.id === selectedSubjectId) || SUBJECT_DATA[0];
+  const activeSubject = SUBJECT_DATA.find(s => s.id === selectedSubjectId);
+  const isGeneralInfo = selectedSubjectId === 'info-umum';
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] font-body text-slate-800 pt-20">
@@ -184,7 +214,9 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
                 <span>/</span>
                 <span className="font-medium text-slate-800">Info TKA</span>
                 <span>/</span>
-                <span className="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{activeSubject.name}</span>
+                <span className="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">
+                  {isGeneralInfo ? GENERAL_INFO.name : activeSubject?.name}
+                </span>
             </div>
             
             <button 
@@ -218,10 +250,25 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
             <div className="lg:col-span-1">
                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden sticky top-32">
                     <div className="p-4 bg-blue-600 text-white">
-                        <h3 className="font-display font-bold text-lg">Mata Pelajaran</h3>
-                        <p className="text-blue-100 text-xs">Pilih mapel untuk melihat detail</p>
+                        <h3 className="font-display font-bold text-lg">Menu Informasi</h3>
+                        <p className="text-blue-100 text-xs">Pilih untuk melihat detail</p>
                     </div>
                     <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible">
+                        {/* GENERAL INFO BUTTON */}
+                        <button
+                            onClick={() => setSelectedSubjectId(GENERAL_INFO.id)}
+                            className={`
+                                flex items-center gap-3 p-4 text-left transition-all border-b border-slate-50 min-w-[200px] lg:min-w-0
+                                ${selectedSubjectId === GENERAL_INFO.id
+                                    ? 'bg-blue-50 text-blue-700 border-l-4 border-l-blue-600' 
+                                    : 'text-slate-600 hover:bg-slate-50 border-l-4 border-l-transparent'}
+                            `}
+                        >
+                            <span className="text-xl">{GENERAL_INFO.icon}</span>
+                            <span className="font-bold text-sm">{GENERAL_INFO.name}</span>
+                        </button>
+
+                        {/* SUBJECT BUTTONS */}
                         {SUBJECT_DATA.map((subject) => (
                             <button
                                 key={subject.id}
@@ -247,7 +294,10 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
                          <div>
                              <h4 className="font-bold text-yellow-800 text-sm mb-1">Tips Belajar</h4>
                              <p className="text-xs text-yellow-700 leading-relaxed">
-                                 Pelajari materi berdasarkan domain yang tertera. Fokus pada pemahaman konsep (L2 & L3), bukan hanya hafalan.
+                                 {isGeneralInfo 
+                                    ? "Pastikan istirahat cukup sebelum hari ujian dan persiapkan alat tulis dengan lengkap." 
+                                    : "Pelajari materi berdasarkan domain yang tertera. Fokus pada pemahaman konsep (L2 & L3), bukan hanya hafalan."
+                                 }
                              </p>
                          </div>
                     </div>
@@ -257,226 +307,329 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
             {/* MAIN CONTENT */}
             <div className="lg:col-span-3">
                 
-                {/* Header Content */}
-                <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200 mb-6">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full mb-3 uppercase tracking-wider">
-                                Jenjang SD/MI - Kelas 6
-                            </span>
-                            <h2 className="font-display text-3xl font-bold text-slate-800 mb-2">
-                                {activeSubject.name}
-                            </h2>
-                        </div>
-                        <div className="text-5xl opacity-10 hidden sm:block grayscale">
-                            {activeSubject.icon}
-                        </div>
-                    </div>
-                    <p className="text-slate-600 leading-relaxed text-lg border-l-4 border-slate-300 pl-4 italic">
-                        "{activeSubject.description}"
-                    </p>
-                </div>
+                {/* GENERAL INFO VIEW */}
+                {isGeneralInfo ? (
+                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+                      <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200">
+                          <div className="flex items-start justify-between mb-4">
+                              <div>
+                                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full mb-3 uppercase tracking-wider">
+                                      Informasi Penting
+                                  </span>
+                                  <h2 className="font-display text-3xl font-bold text-slate-800 mb-2">
+                                      {GENERAL_INFO.name}
+                                  </h2>
+                              </div>
+                              <div className="text-5xl opacity-10 hidden sm:block grayscale">
+                                  {GENERAL_INFO.icon}
+                              </div>
+                          </div>
+                          <p className="text-slate-600 leading-relaxed text-lg border-l-4 border-slate-300 pl-4 italic">
+                              "{GENERAL_INFO.description}"
+                          </p>
+                      </div>
 
-                {/* Tabs Navigation */}
-                <div className="flex border-b border-slate-200 mb-6 gap-6 overflow-x-auto">
-                    <button 
-                        onClick={() => setActiveTab('capaian')}
-                        className={`pb-3 border-b-2 font-bold text-sm whitespace-nowrap transition-colors ${
-                            activeTab === 'capaian' 
-                            ? 'border-blue-600 text-blue-600' 
-                            : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
-                    >
-                        Capaian Pembelajaran
-                    </button>
-                    <button 
-                        onClick={() => setActiveTab('distribusi')}
-                        className={`pb-3 border-b-2 font-bold text-sm whitespace-nowrap transition-colors ${
-                            activeTab === 'distribusi' 
-                            ? 'border-blue-600 text-blue-600' 
-                            : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
-                    >
-                        Distribusi Soal
-                    </button>
-                    <button 
-                         onClick={() => setActiveTab('asesmen')}
-                         className={`pb-3 border-b-2 font-bold text-sm whitespace-nowrap transition-colors ${
-                            activeTab === 'asesmen' 
-                            ? 'border-blue-600 text-blue-600' 
-                            : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
-                    >
-                        Bank Soal Latihan
-                    </button>
-                </div>
-
-                {/* CONTENT: CAPAIAN PEMBELAJARAN */}
-                {activeTab === 'capaian' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        
-                        {/* Section Materi Terpetakan (NEW) */}
-                        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
-                            <h3 className="font-bold text-indigo-900 text-lg mb-4 flex items-center gap-2">
-                                📚 Rangkuman Materi Esensial
-                            </h3>
-                            <ul className="grid md:grid-cols-2 gap-3">
-                                {activeSubject.studyGuides?.map((guide, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-sm text-indigo-800">
-                                        <span className="text-indigo-500 mt-0.5">•</span>
-                                        <span>{guide}</span>
-                                    </li>
+                      {/* NEW: TIMELINE BOX */}
+                      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
+                           <h3 className="font-bold text-indigo-900 text-lg mb-4 flex items-center gap-2">
+                                🗓️ Lini Masa Pelaksanaan (2026)
+                           </h3>
+                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {GENERAL_INFO.timeline.map((item, idx) => (
+                                    <div key={idx} className="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm text-center">
+                                        <p className="text-xs text-slate-400 font-bold uppercase mb-1">{item.phase}</p>
+                                        <p className="text-sm font-bold text-indigo-700">{item.date}</p>
+                                    </div>
                                 ))}
-                            </ul>
+                           </div>
+                      </div>
+
+                      {/* JADWAL GRID */}
+                      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                          <div className="p-4 bg-blue-600 text-white flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                             </svg>
+                             <h3 className="font-bold text-lg">Jadwal Pelaksanaan Utama</h3>
+                          </div>
+                          <div className="overflow-x-auto">
+                              <table className="w-full text-sm text-left">
+                                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                      <tr>
+                                          <th className="px-6 py-4 font-bold">Hari, Tanggal</th>
+                                          <th className="px-6 py-4 font-bold">Waktu</th>
+                                          <th className="px-6 py-4 font-bold">Mata Pelajaran</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100">
+                                      {GENERAL_INFO.schedule.map((sch, idx) => (
+                                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                              <td className="px-6 py-4 font-bold text-slate-700">{sch.day}</td>
+                                              <td className="px-6 py-4 text-slate-600 font-mono">{sch.time}</td>
+                                              <td className="px-6 py-4 text-blue-600 font-bold">{sch.mapel}</td>
+                                          </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                           {/* RULES */}
+                           <div className="bg-red-50 border border-red-100 rounded-xl p-6">
+                              <h3 className="font-bold text-red-800 text-lg mb-4 flex items-center gap-2">
+                                  ⚠️ Tata Tertib Peserta
+                              </h3>
+                              <ul className="space-y-3">
+                                  {GENERAL_INFO.rules.map((rule, idx) => (
+                                      <li key={idx} className="flex items-start gap-2 text-sm text-red-700">
+                                          <span className="mt-0.5">•</span>
+                                          <span>{rule}</span>
+                                      </li>
+                                  ))}
+                              </ul>
+                           </div>
+
+                           {/* REQUIREMENTS */}
+                           <div className="bg-green-50 border border-green-100 rounded-xl p-6">
+                              <h3 className="font-bold text-green-800 text-lg mb-4 flex items-center gap-2">
+                                  🎒 Perlengkapan Wajib
+                              </h3>
+                              <ul className="space-y-3">
+                                  {GENERAL_INFO.requirements.map((req, idx) => (
+                                      <li key={idx} className="flex items-start gap-2 text-sm text-green-700">
+                                          <span className="mt-0.5">✅</span>
+                                          <span>{req}</span>
+                                      </li>
+                                  ))}
+                              </ul>
+                           </div>
+                      </div>
+                   </div>
+                ) : (
+                    // SUBJECT DETAIL VIEW (Existing content wrapper)
+                    <>
+                        {/* Header Content */}
+                        <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="flex items-start justify-between mb-4">
+                                <div>
+                                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full mb-3 uppercase tracking-wider">
+                                        Jenjang SD/MI - Kelas 6
+                                    </span>
+                                    <h2 className="font-display text-3xl font-bold text-slate-800 mb-2">
+                                        {activeSubject?.name}
+                                    </h2>
+                                </div>
+                                <div className="text-5xl opacity-10 hidden sm:block grayscale">
+                                    {activeSubject?.icon}
+                                </div>
+                            </div>
+                            <p className="text-slate-600 leading-relaxed text-lg border-l-4 border-slate-300 pl-4 italic">
+                                "{activeSubject?.description}"
+                            </p>
                         </div>
 
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="font-bold text-slate-800 text-lg">Domain Kompetensi (Kisi-kisi US)</h3>
-                                <span className="text-xs text-slate-500">Standar Kemdikbud</span>
-                            </div>
+                        {/* Tabs Navigation */}
+                        <div className="flex border-b border-slate-200 mb-6 gap-6 overflow-x-auto">
+                            <button 
+                                onClick={() => setActiveTab('capaian')}
+                                className={`pb-3 border-b-2 font-bold text-sm whitespace-nowrap transition-colors ${
+                                    activeTab === 'capaian' 
+                                    ? 'border-blue-600 text-blue-600' 
+                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                Capaian Pembelajaran
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('distribusi')}
+                                className={`pb-3 border-b-2 font-bold text-sm whitespace-nowrap transition-colors ${
+                                    activeTab === 'distribusi' 
+                                    ? 'border-blue-600 text-blue-600' 
+                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                Distribusi Soal
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('asesmen')}
+                                className={`pb-3 border-b-2 font-bold text-sm whitespace-nowrap transition-colors ${
+                                    activeTab === 'asesmen' 
+                                    ? 'border-blue-600 text-blue-600' 
+                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                Bank Soal Latihan
+                            </button>
+                        </div>
 
-                            <div className="space-y-4">
-                                {activeSubject.domains.map((domain, idx) => (
-                                    <div key={idx} className="bg-white rounded-lg border border-slate-200 hover:border-blue-300 transition-colors shadow-sm overflow-hidden group">
-                                        <div className="p-5 flex flex-col md:flex-row gap-4 md:gap-6 md:items-start">
-                                            {/* Number Badge */}
-                                            <div className="shrink-0">
-                                                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                                    {idx + 1}
+                        {/* CONTENT: CAPAIAN PEMBELAJARAN */}
+                        {activeTab === 'capaian' && activeSubject && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                
+                                {/* Section Materi Terpetakan (NEW) */}
+                                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
+                                    <h3 className="font-bold text-indigo-900 text-lg mb-4 flex items-center gap-2">
+                                        📚 Rangkuman Materi Esensial
+                                    </h3>
+                                    <ul className="grid md:grid-cols-2 gap-3">
+                                        {activeSubject.studyGuides?.map((guide, idx) => (
+                                            <li key={idx} className="flex items-start gap-2 text-sm text-indigo-800">
+                                                <span className="text-indigo-500 mt-0.5">•</span>
+                                                <span>{guide}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-bold text-slate-800 text-lg">Domain Kompetensi (Kisi-kisi US)</h3>
+                                        <span className="text-xs text-slate-500">Sesuai Kisi-kisi Resmi Kemdikbud</span>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {activeSubject.domains.map((domain, idx) => (
+                                            <div key={idx} className="bg-white rounded-lg border border-slate-200 hover:border-blue-300 transition-colors shadow-sm overflow-hidden group">
+                                                <div className="p-5 flex flex-col md:flex-row gap-4 md:gap-6 md:items-start">
+                                                    {/* Number Badge */}
+                                                    <div className="shrink-0">
+                                                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                            {idx + 1}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex-grow">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                            <h4 className="font-bold text-slate-800 text-lg">{domain.title}</h4>
+                                                            <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold
+                                                                ${domain.level.includes('L3') ? 'bg-purple-50 text-purple-700 border-purple-100' : 
+                                                                domain.level.includes('L2') ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-green-50 text-green-700 border-green-100'}
+                                                            `}>
+                                                                {domain.level}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                                                            {domain.desc}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            
-                                            <div className="flex-grow">
-                                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                    <h4 className="font-bold text-slate-800 text-lg">{domain.title}</h4>
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold
-                                                        ${domain.level.includes('L3') ? 'bg-purple-50 text-purple-700 border-purple-100' : 
-                                                        domain.level.includes('L2') ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-green-50 text-green-700 border-green-100'}
-                                                    `}>
-                                                        {domain.level}
-                                                    </span>
-                                                </div>
-                                                <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                                                    {domain.desc}
-                                                </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CONTENT: DISTRIBUSI SOAL */}
+                        {activeTab === 'distribusi' && activeSubject && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="p-6 border-b border-slate-100 bg-slate-50">
+                                        <h3 className="font-bold text-lg text-slate-800">Sebaran Materi Ujian</h3>
+                                        <p className="text-slate-500 text-sm">Estimasi jumlah dan persentase soal per topik materi.</p>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-white text-slate-500 border-b border-slate-200">
+                                                <tr>
+                                                    <th className="px-6 py-4 font-bold">No</th>
+                                                    <th className="px-6 py-4 font-bold">Materi Pokok</th>
+                                                    <th className="px-6 py-4 font-bold text-center">Jumlah Soal</th>
+                                                    <th className="px-6 py-4 font-bold text-right">Persentase</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {activeSubject.distributions?.map((dist, idx) => (
+                                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                        <td className="px-6 py-4 text-slate-400 font-medium">{idx + 1}</td>
+                                                        <td className="px-6 py-4 font-bold text-slate-700">{dist.topic}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="inline-block px-3 py-1 bg-slate-100 rounded-full font-bold text-slate-600">{dist.count}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex items-center justify-end gap-3">
+                                                                <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: dist.percent }}></div>
+                                                                </div>
+                                                                <span className="font-bold text-blue-600 w-8">{dist.percent}</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            <tfoot className="bg-slate-50 font-bold text-slate-700">
+                                                <tr>
+                                                    <td colSpan={2} className="px-6 py-4 text-right">Total Soal</td>
+                                                    <td className="px-6 py-4 text-center text-lg">
+                                                        {activeSubject.distributions?.reduce((acc, curr) => acc + curr.count, 0)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">100%</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-100">
+                                    <strong>Catatan:</strong> Distribusi soal dapat berubah menyesuaikan kebijakan dinas pendidikan terkait penyusunan kisi-kisi soal tahun berjalan.
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CONTENT: CONTOH ASESMEN */}
+                        {activeTab === 'asesmen' && activeSubject && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                     <div>
+                                        <h3 className="font-bold text-lg text-slate-800">Bank Soal Latihan</h3>
+                                        <p className="text-xs text-slate-500">Model AKM (Asesmen Kompetensi Minimum) & Materi Esensial</p>
+                                     </div>
+                                     <button className="text-sm font-bold text-blue-600 border border-blue-200 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors">
+                                        📥 Download PDF Soal
+                                     </button>
+                                </div>
+                                
+                                {activeSubject.examples?.map((ex, idx) => (
+                                    <div key={idx} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-200"></div>
+                                        
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="inline-block px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase rounded tracking-wide">
+                                                {ex.type}
+                                            </span>
+                                            <span className="text-slate-300 font-display font-bold text-4xl opacity-50">
+                                                {idx + 1}
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Soal dengan formatting line break untuk Stimulus */}
+                                        <div className="font-medium text-slate-800 mb-6 text-sm md:text-base leading-relaxed whitespace-pre-line">
+                                            {ex.q}
+                                        </div>
+
+                                        {ex.options && ex.options.length > 0 && (
+                                            <div className="space-y-2 mb-6 pl-4 border-l-2 border-slate-100">
+                                                {ex.options.map((opt, i) => (
+                                                    <div key={i} className="text-slate-600 hover:text-slate-900 cursor-default p-2 rounded hover:bg-slate-50 transition-colors text-sm">
+                                                        {opt}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <div className="bg-green-50 border border-green-100 p-3 rounded-lg flex gap-2 items-start">
+                                            <span className="text-green-600 mt-0.5">✅</span>
+                                            <div>
+                                                <span className="text-xs font-bold text-green-700 uppercase block mb-1">Kunci Jawaban & Pembahasan</span>
+                                                <span className="font-bold text-slate-800 text-sm whitespace-pre-line">{ex.ans}</span>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    </div>
+                        )}
+                    </>
                 )}
-
-                {/* CONTENT: DISTRIBUSI SOAL */}
-                {activeTab === 'distribusi' && (
-                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div className="p-6 border-b border-slate-100 bg-slate-50">
-                                <h3 className="font-bold text-lg text-slate-800">Sebaran Materi Ujian</h3>
-                                <p className="text-slate-500 text-sm">Estimasi jumlah dan persentase soal per topik materi.</p>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="bg-white text-slate-500 border-b border-slate-200">
-                                        <tr>
-                                            <th className="px-6 py-4 font-bold">No</th>
-                                            <th className="px-6 py-4 font-bold">Materi Pokok</th>
-                                            <th className="px-6 py-4 font-bold text-center">Jumlah Soal</th>
-                                            <th className="px-6 py-4 font-bold text-right">Persentase</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {activeSubject.distributions?.map((dist, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-6 py-4 text-slate-400 font-medium">{idx + 1}</td>
-                                                <td className="px-6 py-4 font-bold text-slate-700">{dist.topic}</td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="inline-block px-3 py-1 bg-slate-100 rounded-full font-bold text-slate-600">{dist.count}</span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-3">
-                                                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-blue-500 rounded-full" style={{ width: dist.percent }}></div>
-                                                        </div>
-                                                        <span className="font-bold text-blue-600 w-8">{dist.percent}</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot className="bg-slate-50 font-bold text-slate-700">
-                                        <tr>
-                                            <td colSpan={2} className="px-6 py-4 text-right">Total Soal</td>
-                                            <td className="px-6 py-4 text-center text-lg">
-                                                {activeSubject.distributions?.reduce((acc, curr) => acc + curr.count, 0)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">100%</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                        <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-100">
-                            <strong>Catatan:</strong> Distribusi soal dapat berubah menyesuaikan kebijakan dinas pendidikan terkait penyusunan kisi-kisi soal tahun berjalan.
-                        </div>
-                    </div>
-                )}
-
-                {/* CONTENT: CONTOH ASESMEN */}
-                {activeTab === 'asesmen' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                             <div>
-                                <h3 className="font-bold text-lg text-slate-800">Bank Soal Latihan</h3>
-                                <p className="text-xs text-slate-500">Model AKM (Asesmen Kompetensi Minimum) & Materi Esensial</p>
-                             </div>
-                             <button className="text-sm font-bold text-blue-600 border border-blue-200 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors">
-                                📥 Download PDF Soal
-                             </button>
-                        </div>
-                        
-                        {activeSubject.examples?.map((ex, idx) => (
-                            <div key={idx} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-slate-200"></div>
-                                
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="inline-block px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase rounded tracking-wide">
-                                        {ex.type}
-                                    </span>
-                                    <span className="text-slate-300 font-display font-bold text-4xl opacity-50">
-                                        {idx + 1}
-                                    </span>
-                                </div>
-                                
-                                {/* Soal dengan formatting line break untuk Stimulus */}
-                                <div className="font-medium text-slate-800 mb-6 text-sm md:text-base leading-relaxed whitespace-pre-line">
-                                    {ex.q}
-                                </div>
-
-                                {ex.options && ex.options.length > 0 && (
-                                    <div className="space-y-2 mb-6 pl-4 border-l-2 border-slate-100">
-                                        {ex.options.map((opt, i) => (
-                                            <div key={i} className="text-slate-600 hover:text-slate-900 cursor-default p-2 rounded hover:bg-slate-50 transition-colors text-sm">
-                                                {opt}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div className="bg-green-50 border border-green-100 p-3 rounded-lg flex gap-2 items-start">
-                                    <span className="text-green-600 mt-0.5">✅</span>
-                                    <div>
-                                        <span className="text-xs font-bold text-green-700 uppercase block mb-1">Kunci Jawaban & Pembahasan</span>
-                                        <span className="font-bold text-slate-800 text-sm whitespace-pre-line">{ex.ans}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
             </div>
         </div>
       </div>
