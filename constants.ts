@@ -11,7 +11,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Profil", href: "#profil" },
   { label: "Informasi", href: "#informasi" },
   { label: "Jadwal", href: "#jadwal" },
-  { label: "Ujian Akhir", href: "#ujian" },
+  { label: "Info TKA", href: "#ujian" },
   { label: "Galeri", href: "#galeri" },
   { label: "PPDB", href: "#ppdb" },
   { label: "Kontak", href: "#kontak" },
@@ -172,7 +172,7 @@ Jadwal Sekolah: Senin-Jumat, Masuk jam 07.00. Pulang jam 12.30 (Kelas 1-2), 13.3
 Ujian Akhir (Kelas 6):
 - Try Out 1: Februari 2026
 - Ujian Praktek: Maret 2026
-- Asesmen Sumatif Akhir Jenjang (Tertulis): Mei 2026
+- Tes Kemampuan Akademik (TKA): Mei 2026
 
 Jika ditanya tentang pendaftaran, arahkan untuk datang langsung ke sekolah atau hubungi nomor telepon.
 Jika ditanya hal yang tidak ada di data ini, jawablah dengan diplomatis bahwa Anda akan meneruskan pertanyaan ke staf sekolah, atau minta penanya menghubungi nomor telepon sekolah.

@@ -23,13 +23,17 @@ const ExamSection: React.FC<ExamSectionProps> = ({ onOpenDetail }) => {
                     Info Kelas 6
                 </span>
                 
-                <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
+                <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-2 tracking-tight">
                     SIAP HADAPI <br/>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">UJIAN AKHIR?</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">TKA</span>
                 </h2>
                 
+                <div className="text-xl md:text-2xl text-blue-200 font-bold mb-8 tracking-wide font-display">
+                    ( Tes Kemampuan Akademik )
+                </div>
+                
                 <p className="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-                    Dapatkan informasi lengkap mengenai jadwal Try Out, Ujian Praktek, dan Asesmen Sumatif Akhir Jenjang tahun ini.
+                    Dapatkan informasi lengkap mengenai jadwal Try Out, Ujian Praktek, dan persiapan TKA tahun ini.
                 </p>
 
                 <button 

@@ -172,12 +172,17 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
     <div className="min-h-screen bg-[#F5F7FA] font-body text-slate-800 pt-20">
       
       {/* Top Navigation Bar (Breadcrumbs style) */}
-      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-[80px] z-30">
+      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-[70px] md:top-[80px] z-30 transition-all">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-slate-500 overflow-x-auto whitespace-nowrap">
-                <button onClick={onBack} className="hover:text-blue-600 font-medium">Beranda</button>
+            <div className="flex items-center gap-2 text-sm text-slate-500 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                <button onClick={onBack} className="hover:text-blue-600 font-medium flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Beranda
+                </button>
                 <span>/</span>
-                <span className="font-medium text-slate-800">Tes Kemampuan Akhir</span>
+                <span className="font-medium text-slate-800">Info TKA</span>
                 <span>/</span>
                 <span className="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{activeSubject.name}</span>
             </div>
@@ -187,12 +192,24 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
                 className="hidden md:flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-500 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-red-50 transition-colors"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Tutup
+                Kembali
             </button>
         </div>
       </div>
+
+       {/* Floating Back Button (Mobile/Tablet Friendly) */}
+       <button 
+            onClick={onBack}
+            className="fixed bottom-6 left-6 z-50 bg-white/90 backdrop-blur border border-slate-200 text-slate-700 hover:text-blue-600 shadow-lg p-4 rounded-full transition-all hover:scale-110 hover:shadow-xl group"
+            title="Kembali ke Beranda"
+            aria-label="Kembali"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+       </button>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
