@@ -123,10 +123,12 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin, schoolProfile }) => {
                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5 shadow-sm mt-0.5">📍</div>
                         <span className="leading-relaxed py-1 group-hover:text-white transition-colors">{schoolProfile.address}</span>
                     </li>
-                    <li className="flex items-center justify-center md:justify-start gap-4 group">
-                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5 shadow-sm">📞</div>
-                        <span className="group-hover:text-white transition-colors">{schoolProfile.phone}</span>
-                    </li>
+                    {schoolProfile.phone && (
+                        <li className="flex items-center justify-center md:justify-start gap-4 group">
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5 shadow-sm">📞</div>
+                            <span className="group-hover:text-white transition-colors">{schoolProfile.phone}</span>
+                        </li>
+                    )}
                     <li className="flex items-center justify-center md:justify-start gap-4 group">
                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-brand-primary shrink-0 group-hover:bg-brand-primary group-hover:text-white transition-colors border border-white/5 shadow-sm">✉️</div>
                         <span className="group-hover:text-white transition-colors">{schoolProfile.email}</span>

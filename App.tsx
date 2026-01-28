@@ -6,19 +6,19 @@ import ProfileSection from './components/ProfileSection';
 import NewsSection from './components/NewsSection';
 import ScheduleSection from './components/ScheduleSection';
 import ExamSection from './components/ExamSection'; 
-import ExamDetailPage from './components/ExamDetailPage'; // Import New Detail Page
+import ExamDetailPage from './components/ExamDetailPage'; 
 import GallerySection from './components/GallerySection';
 import PPDBSection from './components/PPDBSection';
+import SuggestionSection from './components/SuggestionSection'; // Import Suggestion Box
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
 import AdminDashboard from './components/AdminDashboard';
 import AllTeachersPage from './components/AllTeachersPage';
 import NewsDetailPage from './components/NewsDetailPage'; 
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
-import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from './types';
+import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile, Suggestion } from './types';
 import { db } from './services/firebase';
-// Added getDoc and deleteDoc for standardized profile handling
-import { collection, getDocs, addDoc, doc, setDoc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, setDoc, updateDoc, getDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 
 function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -27,7 +27,7 @@ function App() {
   // Navigation State
   const [showAllTeachers, setShowAllTeachers] = useState(false);
   const [activeNewsItem, setActiveNewsItem] = useState<NewsItem | null>(null);
-  const [showExamDetail, setShowExamDetail] = useState(false); // New State for Exam Detail
+  const [showExamDetail, setShowExamDetail] = useState(false); 
 
   // Database States
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>({
@@ -50,6 +50,7 @@ function App() {
   const [teachersData, setTeachersData] = useState<Teacher[]>([]);
   const [schedulesData, setSchedulesData] = useState<ClassSchedule[]>([]);
   const [galleryData, setGalleryData] = useState<GalleryImage[]>([]);
+  const [suggestionsData, setSuggestionsData] = useState<Suggestion[]>([]); // State for Suggestions
 
   // FETCH DATA FROM FIREBASE
   useEffect(() => {
@@ -60,26 +61,21 @@ function App() {
         const mainDocSnap = await getDoc(mainDocRef);
 
         if (mainDocSnap.exists()) {
-            // Jika dokumen 'main' sudah ada (hasil save dari Admin), gunakan ini.
             const data = mainDocSnap.data();
             setSchoolProfile(prev => ({
                 ...prev,
                 ...data,
-                // Merge nested socialMedia object to prevent overwrite if keys are missing in DB
                 socialMedia: {
                     ...prev.socialMedia,
                     ...(data.socialMedia || {})
                 }
             }));
         } else {
-            // FALLBACK: Cek apakah ada dokumen lama dengan ID acak (Legacy data)
             const profileSnap = await getDocs(collection(db, "school_profile"));
             
             if (!profileSnap.empty) {
-                const legacyDoc = profileSnap.docs[0]; // Ambil yang pertama
+                const legacyDoc = profileSnap.docs[0];
                 const data = legacyDoc.data();
-                
-                // Update state
                 setSchoolProfile(prev => ({
                     ...prev,
                     ...data,
@@ -88,15 +84,9 @@ function App() {
                         ...(data.socialMedia || {})
                     }
                 }));
-
-                // MIGRASI OTOMATIS:
-                // Simpan data ini ke 'main' agar sinkron dengan Admin Panel
                 await setDoc(doc(db, "school_profile", "main"), data);
-                // Hapus data lama yang ID-nya acak agar tidak bingung kedepannya
                 await deleteDoc(legacyDoc.ref);
-                console.log("Database Profil berhasil dimigrasi ke standar baru.");
             } else {
-                // Jika belum ada data sama sekali, buat baru dengan ID 'main'
                 await setDoc(doc(db, "school_profile", "main"), schoolProfile);
             }
         }
@@ -105,23 +95,6 @@ function App() {
         const newsSnap = await getDocs(collection(db, "news"));
         if (!newsSnap.empty) {
             const fetchedNews = newsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
-            
-            // SYNC FIX FOR NEWS (PPDB YEAR)
-            const ppdbNews = fetchedNews.find((n: any) => n.title.includes("Penerimaan Siswa Baru"));
-            const targetPPDB = NEWS.find(n => n.title.includes("Penerimaan Siswa Baru"));
-
-            if (ppdbNews && targetPPDB && ppdbNews.title !== targetPPDB.title) {
-                 console.log("Syncing PPDB News year to 2025/2026...");
-                 await updateDoc(doc(db, "news", ppdbNews.id), {
-                     title: targetPPDB.title,
-                     date: targetPPDB.date,
-                     content: targetPPDB.content
-                 });
-                 ppdbNews.title = targetPPDB.title;
-                 ppdbNews.date = targetPPDB.date;
-                 ppdbNews.content = targetPPDB.content;
-            }
-
             setNewsData(fetchedNews);
         } else {
             for (const item of NEWS) {
@@ -136,43 +109,12 @@ function App() {
         const teachersSnap = await getDocs(collection(db, "teachers"));
         if (!teachersSnap.empty) {
             let fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
-            
-            // --- HAPUS SITI AMINAH DARI DATABASE (One-time Cleanup) ---
-            const sitiAminah = fetchedTeachers.find((t: any) => t.name === "Siti Aminah, S.Pd");
-            if (sitiAminah) {
-                console.log("Menghapus Siti Aminah dari database...");
-                await deleteDoc(doc(db, "teachers", sitiAminah.id));
-                // Hapus dari array lokal agar langsung hilang dari UI
-                fetchedTeachers = fetchedTeachers.filter((t: any) => t.id !== sitiAminah.id);
-            }
-            // ---------------------------------------------------------
-
-            // SYNC FIX: Ensure DB data matches constants for critical fields
-            for (const tConstant of TEACHERS) {
-                const tDB = fetchedTeachers.find((t: any) => t.role === tConstant.role);
-                
-                if (tDB) {
-                    const nameChanged = tDB.name !== tConstant.name;
-                    const imageChanged = tDB.image !== tConstant.image;
-
-                    if (nameChanged || imageChanged) {
-                         console.log(`Syncing teacher data for ${tConstant.role}...`);
-                         await updateDoc(doc(db, "teachers", tDB.id), {
-                             name: tConstant.name,
-                             image: tConstant.image
-                         });
-                         tDB.name = tConstant.name;
-                         tDB.image = tConstant.image;
-                    }
-                }
-            }
-
+            // Ensure no legacy data issues
             fetchedTeachers.sort((a, b) => {
                 if (a.role === "Kepala Sekolah") return -1;
                 if (b.role === "Kepala Sekolah") return 1;
                 return 0;
             });
-
             setTeachersData(fetchedTeachers);
         } else {
             for (const item of TEACHERS) {
@@ -207,6 +149,13 @@ function App() {
                 await setDoc(doc(db, "schedules", item.className), item);
             }
             setSchedulesData(CLASS_SCHEDULES);
+        }
+
+        // 6. Fetch Suggestions (For Admin)
+        const suggestionsSnap = await getDocs(query(collection(db, "suggestions"), orderBy("timestamp", "desc")));
+        if (!suggestionsSnap.empty) {
+             const fetchedSuggestions = suggestionsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
+             setSuggestionsData(fetchedSuggestions);
         }
 
       } catch (error) {
@@ -261,6 +210,8 @@ function App() {
         <ExamSection onOpenDetail={() => { setShowExamDetail(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <GallerySection galleryItems={galleryData} />
         <PPDBSection />
+        {/* ADD SUGGESTION SECTION BEFORE FOOTER */}
+        <SuggestionSection schoolProfile={schoolProfile} />
       </>
     );
   }
@@ -294,6 +245,8 @@ function App() {
           setSchedulesData={setSchedulesData}
           galleryData={galleryData}
           setGalleryData={setGalleryData}
+          suggestionsData={suggestionsData} // Pass Suggestions to Admin
+          setSuggestionsData={setSuggestionsData}
         />
       )}
     </div>

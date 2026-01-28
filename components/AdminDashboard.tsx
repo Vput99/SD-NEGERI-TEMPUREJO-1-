@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from '../types';
+import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile, Suggestion } from '../types';
 import { db } from '../services/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { generateNewsContent } from '../services/geminiService';
@@ -18,9 +18,11 @@ interface AdminDashboardProps {
     setSchedulesData: React.Dispatch<React.SetStateAction<ClassSchedule[]>>;
     galleryData: GalleryImage[];
     setGalleryData: React.Dispatch<React.SetStateAction<GalleryImage[]>>;
+    suggestionsData: Suggestion[]; // New Prop
+    setSuggestionsData: React.Dispatch<React.SetStateAction<Suggestion[]>>; // New Prop
 }
 
-type TabType = 'dashboard' | 'news' | 'teachers' | 'schedules' | 'gallery' | 'identity';
+type TabType = 'dashboard' | 'news' | 'teachers' | 'schedules' | 'gallery' | 'identity' | 'suggestions';
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
     isOpen, onClose, 
@@ -28,7 +30,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     newsData, setNewsData,
     teachersData, setTeachersData,
     schedulesData, setSchedulesData,
-    galleryData, setGalleryData
+    galleryData, setGalleryData,
+    suggestionsData, setSuggestionsData
 }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
@@ -94,8 +97,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     ctx.drawImage(img, 0, 0, width, height);
 
                     // FIX: Logika Penentuan Format Output
-                    // Jika file asli PNG/WEBP, gunakan 'image/webp' agar transparansi TETAP ADA.
-                    // Jika file asli JPG, gunakan 'image/jpeg' agar kompresi maksimal.
                     let outputMime = 'image/jpeg';
                     if (file.type === 'image/png' || file.type === 'image/webp') {
                         outputMime = 'image/webp'; 
@@ -105,7 +106,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     let quality = 0.8;
                     let dataUrl = canvas.toDataURL(outputMime, quality);
 
-                    // Loop to ensure size is under ~900KB (Safety margin for Firestore 1MB)
                     const MAX_BASE64_LENGTH = 1000000; 
 
                     while (dataUrl.length > MAX_BASE64_LENGTH && quality > 0.1) {
@@ -162,26 +162,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
-    // --- CRUD: NEWS ---
+    // --- CRUD OPERATIONS ---
     const handleSaveNews = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingNews?.title || !editingNews?.date) return;
         setLoading(true);
         try {
             if (editingNews.id) {
-                // Update
                 const newsRef = doc(db, "news", String(editingNews.id));
                 const { id, ...data } = editingNews;
                 await updateDoc(newsRef, data);
                 setNewsData(prev => prev.map(item => item.id === editingNews.id ? editingNews as NewsItem : item));
             } else {
-                // Create
                 const newDoc = await addDoc(collection(db, "news"), editingNews);
                 setNewsData(prev => [{ ...editingNews, id: newDoc.id } as NewsItem, ...prev]);
             }
             setEditingNews(null);
         } catch (error: any) {
-            console.error("Error saving news:", error);
             alert(`Gagal menyimpan berita: ${error.message}`);
         } finally {
             setLoading(false);
@@ -195,14 +192,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             await deleteDoc(doc(db, "news", String(id)));
             setNewsData(prev => prev.filter(item => item.id !== id));
         } catch (error) {
-            console.error("Error deleting news:", error);
             alert("Gagal menghapus berita");
         } finally {
             setLoading(false);
         }
     };
 
-    // --- CRUD: TEACHERS ---
     const handleSaveTeacher = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingTeacher?.name) return;
@@ -235,7 +230,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
-    // --- CRUD: GALLERY ---
     const handleSaveGallery = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingGallery?.src) return;
@@ -268,20 +262,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
-    // --- CRUD: PROFILE ---
     const handleSaveProfile = async () => {
         setLoading(true);
         try {
-            // Find existing profile doc or create new.
-            // Using merge: true ensures that if the document exists, we update fields; 
-            // if not, we create it.
             await setDoc(doc(db, "school_profile", "main"), schoolProfile, { merge: true });
             alert("Profil sekolah berhasil disimpan!");
         } catch (error: any) {
-            console.error(error);
             alert("Gagal menyimpan profil.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteSuggestion = async (id: string) => {
+        if (!confirm("Hapus pesan ini dari kotak masuk?")) return;
+        try {
+            await deleteDoc(doc(db, "suggestions", id));
+            setSuggestionsData(prev => prev.filter(s => s.id !== id));
+        } catch (error) {
+            alert("Gagal menghapus pesan");
         }
     };
 
@@ -305,6 +304,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <nav className="flex-grow p-4 space-y-2">
                             <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'dashboard' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
                                 <span>📊</span> Dashboard
+                            </button>
+                            <button onClick={() => setActiveTab('suggestions')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'suggestions' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>📬</span> Kotak Masuk
+                                {suggestionsData.length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-auto">{suggestionsData.length}</span>}
                             </button>
                             <button onClick={() => setActiveTab('identity')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'identity' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
                                 <span>🏫</span> Identitas
@@ -365,7 +368,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <h2 className="text-3xl font-bold mb-2 text-slate-800">Selamat Datang, Admin! 👋</h2>
                                     <p className="text-slate-500 mb-8">Ringkasan data website sekolah saat ini.</p>
                                     
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                        {/* Card Suggestions (New) */}
+                                        <div className="bg-gradient-to-br from-purple-500 to-violet-600 p-6 rounded-2xl shadow-lg shadow-purple-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                            <div className="relative z-10">
+                                                <h3 className="text-purple-100 text-sm font-bold uppercase tracking-wider mb-1">Kritik & Saran</h3>
+                                                <p className="text-5xl font-black">{suggestionsData.length}</p>
+                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-purple-50">
+                                                    <span>Pesan masuk</span>
+                                                </div>
+                                            </div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">📬</div>
+                                        </div>
+
                                         {/* Card 1: Berita */}
                                         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                                             <div className="relative z-10">
@@ -406,14 +421,65 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                                         <h3 className="font-bold text-slate-800 mb-4">Akses Cepat</h3>
                                         <div className="flex gap-4">
+                                            <button onClick={() => setActiveTab('suggestions')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
+                                                📬 Cek Kotak Masuk
+                                            </button>
                                             <button onClick={() => setActiveTab('news')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
                                                 + Tulis Berita
                                             </button>
-                                            <button onClick={() => setActiveTab('gallery')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
-                                                + Upload Foto
-                                            </button>
                                         </div>
                                     </div>
+                                </div>
+                            )}
+
+                            {/* --- TAB: SUGGESTIONS --- */}
+                            {activeTab === 'suggestions' && (
+                                <div>
+                                    <h2 className="text-2xl font-bold mb-6">Kotak Masuk (Kritik & Saran)</h2>
+                                    {suggestionsData.length === 0 ? (
+                                        <div className="text-center py-20 bg-white rounded-xl border-2 border-dashed border-slate-200">
+                                            <div className="text-6xl mb-4 opacity-20">📭</div>
+                                            <p className="text-slate-400">Belum ada pesan masuk.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {suggestionsData.map((msg) => (
+                                                <div key={msg.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="flex gap-3 items-center">
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
+                                                                ${msg.type === 'Saran' ? 'bg-blue-100 text-blue-600' : 
+                                                                  msg.type === 'Kritik' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                                                {msg.type === 'Saran' ? '💡' : msg.type === 'Kritik' ? '⚠️' : '❓'}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-slate-800">{msg.name}</h4>
+                                                                <p className="text-xs text-slate-500">{msg.date} • {msg.email || 'Tanpa kontak'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleDeleteSuggestion(msg.id)}
+                                                            className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full"
+                                                            title="Hapus Pesan"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">
+                                                        {msg.message}
+                                                    </div>
+                                                    <div className="mt-3 flex justify-end">
+                                                        <a 
+                                                            href={`mailto:${msg.email}`} 
+                                                            className={`text-xs font-bold text-brand-primary hover:underline flex items-center gap-1 ${!msg.email ? 'pointer-events-none opacity-50' : ''}`}
+                                                        >
+                                                            ↩️ Balas via Email
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -724,15 +790,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     className="w-full border rounded p-2"
                                                 />
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1">No Telepon</label>
-                                                <input 
-                                                    type="text" 
-                                                    value={schoolProfile.phone} 
-                                                    onChange={e => setSchoolProfile({...schoolProfile, phone: e.target.value})}
-                                                    className="w-full border rounded p-2"
-                                                />
-                                            </div>
+                                            {/* Phone Input Removed */}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Alamat Lengkap</label>

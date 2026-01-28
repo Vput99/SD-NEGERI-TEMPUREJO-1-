@@ -3,7 +3,7 @@ import { NavItem, Teacher, NewsItem, ClassSchedule, GalleryImage } from './types
 
 export const SCHOOL_NAME = "SD Negeri Tempurejo 1 Kota Kediri";
 export const SCHOOL_ADDRESS = "Jl. Tempurejo, Kec. Pesantren, Kota Kediri, Jawa Timur"; 
-export const SCHOOL_PHONE = "(0354) 123-4567";
+export const SCHOOL_PHONE = ""; // Kosongkan nomor telepon
 export const SCHOOL_EMAIL = "info@sdntempurejo1kediri.sch.id";
 
 export const NAV_ITEMS: NavItem[] = [
@@ -154,7 +154,6 @@ Jawablah pertanyaan dalam Bahasa Indonesia.
 Informasi Sekolah:
 Nama: ${SCHOOL_NAME}
 Alamat: ${SCHOOL_ADDRESS}
-Telepon: ${SCHOOL_PHONE}
 Email: ${SCHOOL_EMAIL}
 Kepala Sekolah: Nita Ekaningkarti Adji, S.Pd
 
@@ -173,6 +172,6 @@ Ujian Akhir (Kelas 6):
 - Ujian Praktek: Maret 2026
 - Tes Kemampuan Akademik (TKA): 20 - 30 April 2026
 
-Jika ditanya tentang pendaftaran, arahkan untuk datang langsung ke sekolah atau hubungi nomor telepon.
-Jika ditanya hal yang tidak ada di data ini, jawablah dengan diplomatis bahwa Anda akan meneruskan pertanyaan ke staf sekolah, atau minta penanya menghubungi nomor telepon sekolah.
+Jika ditanya tentang pendaftaran, arahkan untuk datang langsung ke sekolah.
+Jika ditanya hal yang tidak ada di data ini, jawablah dengan diplomatis bahwa Anda akan meneruskan pertanyaan ke staf sekolah.
 `;

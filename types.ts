@@ -63,3 +63,13 @@ export interface SchoolProfile {
     tiktok: string;
   };
 }
+
+export interface Suggestion {
+  id: string;
+  name: string;
+  email: string; // Email or Phone number
+  type: 'Kritik' | 'Saran' | 'Pertanyaan';
+  message: string;
+  date: string;
+  isRead?: boolean;
+}
