@@ -50,13 +50,15 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white pt-24 md:pt-32 flex flex-col items-center">
+      {/* UPDATE: Padding top ditingkatkan (pt-32 md:pt-48) agar tidak menabrak header */}
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white pt-32 md:pt-48 flex flex-col items-center">
         
         {/* Logos Display (Static, Large, Blended with Glass Effect) */}
-        <div className="flex items-center justify-center gap-6 md:gap-10 mb-8 md:mb-12 animate-in fade-in zoom-in duration-1000">
+        <div className="flex items-center justify-center gap-4 md:gap-8 mb-6 md:mb-10 animate-in fade-in zoom-in duration-1000">
             {/* Logo Daerah (Kiri) */}
             {schoolProfile.logoDaerah && (
-                <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-full p-4 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
+                // UPDATE: Ukuran disesuaikan agar lebih proporsional di laptop
+                <div className="w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white/10 backdrop-blur-md rounded-full p-3 md:p-4 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
                     <img 
                         src={schoolProfile.logoDaerah} 
                         alt="Logo Daerah" 
@@ -67,7 +69,8 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
             
             {/* Logo Sekolah (Tengah - Besar) */}
             {schoolProfile.logo && (
-                <div className="w-40 h-40 md:w-56 md:h-56 bg-white/20 backdrop-blur-xl rounded-full p-6 border-2 border-white/30 shadow-2xl shadow-brand-primary/20 transform hover:scale-105 transition-all duration-500 relative z-10 hover:bg-white/25">
+                // UPDATE: Ukuran disesuaikan
+                <div className="w-32 h-32 md:w-44 md:h-44 lg:w-56 lg:h-56 bg-white/20 backdrop-blur-xl rounded-full p-4 md:p-6 border-2 border-white/30 shadow-2xl shadow-brand-primary/20 transform hover:scale-105 transition-all duration-500 relative z-10 hover:bg-white/25">
                      <img 
                         src={schoolProfile.logo} 
                         alt="Logo Sekolah" 
@@ -78,7 +81,8 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
 
             {/* Logo Mapan (Kanan) */}
             {schoolProfile.logoMapan && (
-                <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-full p-4 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
+                // UPDATE: Ukuran disesuaikan
+                <div className="w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-white/10 backdrop-blur-md rounded-full p-3 md:p-4 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
                     <img 
                         src={schoolProfile.logoMapan} 
                         alt="Logo Mapan" 
@@ -88,25 +92,25 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
             )}
         </div>
 
-        <div className="mb-6 md:mb-8 inline-flex items-center gap-2 glass px-4 py-1.5 md:px-6 md:py-2 rounded-full animate-float shadow-lg border-brand-accent/30">
+        <div className="mb-4 md:mb-8 inline-flex items-center gap-2 glass px-4 py-1.5 md:px-6 md:py-2 rounded-full animate-float shadow-lg border-brand-accent/30">
             <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-brand-accent animate-pulse"></span>
             <span className="text-brand-light font-bold text-xs md:text-sm uppercase tracking-wider">
                 Sekolah Adiwiyata
             </span>
         </div>
         
-        <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-6 drop-shadow-xl leading-tight">
+        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 drop-shadow-xl leading-tight">
           Mewujudkan Generasi <br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-yellow-200">
             Cerdas & Berbudaya
           </span>
         </h1>
         
-        <p className="font-body text-base sm:text-lg md:text-2xl mb-8 md:mb-12 font-light drop-shadow-md text-slate-100 max-w-3xl mx-auto px-2">
+        <p className="font-body text-base sm:text-lg md:text-xl lg:text-2xl mb-8 md:mb-12 font-light drop-shadow-md text-slate-100 max-w-3xl mx-auto px-2">
           {schoolProfile.name} hadir dengan konsep pendidikan modern yang menyatu dengan alam.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-xs sm:max-w-none mx-auto">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-xs sm:max-w-none mx-auto pb-10">
           <a 
             href="#profil" 
             onClick={(e) => scrollToSection(e, '#profil')}
