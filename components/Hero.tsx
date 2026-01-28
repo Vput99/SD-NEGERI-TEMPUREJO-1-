@@ -50,7 +50,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white mt-16 md:mt-0 flex flex-col items-center">
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white pt-24 md:pt-32 flex flex-col items-center">
         
         {/* Logos Display (Static, Large, Blended with Glass Effect) */}
         <div className="flex items-center justify-center gap-6 md:gap-10 mb-8 md:mb-12 animate-in fade-in zoom-in duration-1000">
