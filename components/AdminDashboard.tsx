@@ -41,6 +41,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [compressing, setCompressing] = useState(false);
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
+    // --- SCHEDULE STATE ---
+    const [selectedClassTab, setSelectedClassTab] = useState("Kelas 1");
+
     // --- FORM STATES ---
     const [editingNews, setEditingNews] = useState<Partial<NewsItem> | null>(null);
     const [editingTeacher, setEditingTeacher] = useState<Partial<Teacher> | null>(null);
@@ -314,6 +317,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </button>
                             <button onClick={() => setActiveTab('news')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'news' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
                                 <span>📰</span> Berita
+                            </button>
+                            <button onClick={() => setActiveTab('schedules')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'schedules' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
+                                <span>📅</span> Jadwal
                             </button>
                             <button onClick={() => setActiveTab('teachers')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'teachers' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
                                 <span>👨‍🏫</span> Guru
@@ -617,6 +623,129 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                 </div>
                             )}
+
+                             {/* --- TAB: JADWAL (SCHEDULES) --- */}
+                             {activeTab === 'schedules' && (
+                                <div>
+                                    {/* Class Selector */}
+                                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                                        {schedulesData.map(s => (
+                                            <button 
+                                                key={s.className}
+                                                onClick={() => setSelectedClassTab(s.className)}
+                                                className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${selectedClassTab === s.className ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-brand-primary'}`}
+                                            >
+                                                {s.className}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Schedule Editor for Selected Class */}
+                                    {(() => {
+                                        const currentScheduleIndex = schedulesData.findIndex(s => s.className === selectedClassTab);
+                                        const currentSchedule = schedulesData[currentScheduleIndex];
+
+                                        if (!currentSchedule) return <div className="p-8 text-center text-slate-400">Data jadwal tidak ditemukan.</div>;
+
+                                        const handleUpdateSchedule = (dayIndex: number, slotIndex: number, field: 'time' | 'subject', value: string) => {
+                                            const newSchedules = [...schedulesData];
+                                            newSchedules[currentScheduleIndex].days[dayIndex].schedule[slotIndex][field] = value;
+                                            setSchedulesData(newSchedules);
+                                        };
+
+                                        const handleAddSlot = (dayIndex: number) => {
+                                            const newSchedules = [...schedulesData];
+                                            newSchedules[currentScheduleIndex].days[dayIndex].schedule.push({ time: "00:00 - 00:00", subject: "Mata Pelajaran" });
+                                            setSchedulesData(newSchedules);
+                                        };
+
+                                        const handleDeleteSlot = (dayIndex: number, slotIndex: number) => {
+                                             const newSchedules = [...schedulesData];
+                                             newSchedules[currentScheduleIndex].days[dayIndex].schedule.splice(slotIndex, 1);
+                                             setSchedulesData(newSchedules);
+                                        };
+
+                                        const handleSaveScheduleToDB = async () => {
+                                            setLoading(true);
+                                            try {
+                                                await setDoc(doc(db, "schedules", currentSchedule.className), currentSchedule);
+                                                alert(`Jadwal ${currentSchedule.className} berhasil disimpan!`);
+                                            } catch (error) {
+                                                console.error(error);
+                                                alert("Gagal menyimpan jadwal.");
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        };
+
+                                        return (
+                                            <div>
+                                                <div className="flex justify-between items-center mb-6">
+                                                    <h3 className="font-bold text-xl text-slate-800">Edit Jadwal {currentSchedule.className}</h3>
+                                                    <button 
+                                                        onClick={handleSaveScheduleToDB}
+                                                        disabled={loading}
+                                                        className="bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-dark disabled:opacity-50 flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
+                                                    >
+                                                        {loading ? 'Menyimpan...' : (
+                                                            <>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                                                Simpan Perubahan
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+                                                    {currentSchedule.days.map((day, dayIndex) => (
+                                                        <div key={day.dayName} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                                            <h4 className="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 flex justify-between items-center">
+                                                                {day.dayName}
+                                                                <span className="text-xs text-slate-400 font-normal">{day.schedule.length} Mapel</span>
+                                                            </h4>
+                                                            <div className="space-y-3">
+                                                                {day.schedule.map((slot, slotIndex) => (
+                                                                    <div key={slotIndex} className="flex gap-2 items-start group">
+                                                                        <div className="flex-grow space-y-1">
+                                                                            <input 
+                                                                                type="text" 
+                                                                                value={slot.time}
+                                                                                onChange={(e) => handleUpdateSchedule(dayIndex, slotIndex, 'time', e.target.value)}
+                                                                                className="w-full text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:border-brand-primary"
+                                                                                placeholder="07:00 - 08:00"
+                                                                            />
+                                                                            <input 
+                                                                                type="text" 
+                                                                                value={slot.subject}
+                                                                                onChange={(e) => handleUpdateSchedule(dayIndex, slotIndex, 'subject', e.target.value)}
+                                                                                className="w-full text-sm font-semibold text-slate-800 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary"
+                                                                                placeholder="Nama Pelajaran"
+                                                                            />
+                                                                        </div>
+                                                                        <button 
+                                                                            onClick={() => handleDeleteSlot(dayIndex, slotIndex)}
+                                                                            className="text-red-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity self-center"
+                                                                            title="Hapus Jam Ini"
+                                                                        >
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                                <button 
+                                                                    onClick={() => handleAddSlot(dayIndex)}
+                                                                    className="w-full py-2 border-2 border-dashed border-slate-100 rounded-lg text-slate-400 text-xs font-bold hover:border-brand-primary hover:text-brand-primary hover:bg-brand-light transition-all flex items-center justify-center gap-1 mt-2"
+                                                                >
+                                                                    + Tambah Jam
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                             )}
 
                             {/* --- TAB: GURU --- */}
                             {activeTab === 'teachers' && (
