@@ -732,6 +732,62 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             />
                                         </div>
                                         
+                                        {/* KONTAK & SOSMED SECTION */}
+                                        <div className="border-t pt-4 mt-2">
+                                            <h4 className="font-bold mb-3 text-slate-700">Kontak & Media Sosial</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Email</label>
+                                                    <input 
+                                                        type="email" 
+                                                        value={schoolProfile.email} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, email: e.target.value})}
+                                                        className="w-full border rounded p-2"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Facebook URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.facebook} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, facebook: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://facebook.com/..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Instagram URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.instagram} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, instagram: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://instagram.com/..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">TikTok URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.tiktok} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, tiktok: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://tiktok.com/@..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">YouTube URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.youtube} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, youtube: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://youtube.com/..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div className="border-t pt-4 mt-4">
                                             <h4 className="font-bold mb-2">Logo Sekolah</h4>
                                             <div className="flex items-center gap-4">

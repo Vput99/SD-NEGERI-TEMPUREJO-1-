@@ -40,7 +40,8 @@ function App() {
     socialMedia: {
       facebook: "https://facebook.com",
       instagram: "https://instagram.com",
-      youtube: "https://youtube.com"
+      youtube: "https://youtube.com",
+      tiktok: "https://tiktok.com"
     }
   });
 
@@ -68,7 +69,8 @@ function App() {
                 socialMedia: {
                     facebook: data.socialMedia?.facebook || "",
                     instagram: data.socialMedia?.instagram || "",
-                    youtube: data.socialMedia?.youtube || ""
+                    youtube: data.socialMedia?.youtube || "",
+                    tiktok: data.socialMedia?.tiktok || ""
                 }
             });
         } else {

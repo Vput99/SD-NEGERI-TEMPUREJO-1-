@@ -60,5 +60,6 @@ export interface SchoolProfile {
     facebook: string;
     instagram: string;
     youtube: string;
+    tiktok: string;
   };
 }
