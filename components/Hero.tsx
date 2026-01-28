@@ -28,7 +28,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
     // CHANGE: justify-center (agar konten di tengah vertikal)
     // CHANGE: padding disesuaikan (pt-20 md:pt-28) agar pas di bawah header tapi tidak terlalu turun
     // CHANGE: pb-32 (memberi ruang untuk ombak di bawah)
-    <div id="beranda" className="relative w-full min-h-screen flex flex-col items-center justify-center pt-20 md:pt-28 pb-28 md:pb-32 overflow-hidden">
+    <div id="beranda" className="relative w-full min-h-screen flex flex-col items-center justify-center pt-20 md:pt-28 pb-20 md:pb-24 overflow-hidden">
       {/* Background Slideshow */}
       {HERO_IMAGES.map((img, index) => (
         <div 
@@ -137,9 +137,13 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
         </div>
       </div>
 
-      {/* Modern Curvy Divider - Ensure it stays at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
-        <svg viewBox="0 0 1440 320" className="w-full h-auto block drop-shadow-sm max-h-[15vh] md:max-h-[20vh] object-cover object-bottom">
+      {/* Modern Curvy Divider - Ensure it stays at bottom and STRETCHES */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none leading-none">
+        <svg 
+            viewBox="0 0 1440 320" 
+            className="w-full h-[60px] md:h-[120px] lg:h-[160px] block drop-shadow-sm" 
+            preserveAspectRatio="none"
+        >
           <path fill="#ECFDF5" fillOpacity="1" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,170.7C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
         </svg>
       </div>
