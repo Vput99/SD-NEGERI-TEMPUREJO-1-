@@ -137,6 +137,16 @@ function App() {
         if (!teachersSnap.empty) {
             let fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             
+            // --- HAPUS SITI AMINAH DARI DATABASE (One-time Cleanup) ---
+            const sitiAminah = fetchedTeachers.find((t: any) => t.name === "Siti Aminah, S.Pd");
+            if (sitiAminah) {
+                console.log("Menghapus Siti Aminah dari database...");
+                await deleteDoc(doc(db, "teachers", sitiAminah.id));
+                // Hapus dari array lokal agar langsung hilang dari UI
+                fetchedTeachers = fetchedTeachers.filter((t: any) => t.id !== sitiAminah.id);
+            }
+            // ---------------------------------------------------------
+
             // SYNC FIX: Ensure DB data matches constants for critical fields
             for (const tConstant of TEACHERS) {
                 const tDB = fetchedTeachers.find((t: any) => t.role === tConstant.role);

@@ -19,7 +19,6 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const TEACHERS: Teacher[] = [
   { id: 1, name: "Nita Ekaningkarti Adji, S.Pd", role: "Kepala Sekolah", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=400&auto=format&fit=crop" },
-  { id: 2, name: "Siti Aminah, S.Pd", role: "Wali Kelas 1", image: "https://images.unsplash.com/photo-1554721242-98fa36206c59?q=80&w=400&h=400&auto=format&fit=crop" },
   { id: 3, name: "Rahmat Hidayat, S.Kom", role: "Guru TIK", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=400&auto=format&fit=crop" },
   { id: 4, name: "Dewi Lestari, S.Sn", role: "Guru Kesenian", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=400&auto=format&fit=crop" },
 ];
