@@ -18,8 +18,8 @@ interface AdminDashboardProps {
     setSchedulesData: React.Dispatch<React.SetStateAction<ClassSchedule[]>>;
     galleryData: GalleryImage[];
     setGalleryData: React.Dispatch<React.SetStateAction<GalleryImage[]>>;
-    suggestionsData: Suggestion[]; // New Prop
-    setSuggestionsData: React.Dispatch<React.SetStateAction<Suggestion[]>>; // New Prop
+    suggestionsData: Suggestion[]; 
+    setSuggestionsData: React.Dispatch<React.SetStateAction<Suggestion[]>>; 
 }
 
 type TabType = 'dashboard' | 'news' | 'teachers' | 'schedules' | 'gallery' | 'identity' | 'suggestions';
@@ -40,6 +40,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [loading, setLoading] = useState(false);
     const [compressing, setCompressing] = useState(false);
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+    
+    // Mobile Sidebar State
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // --- SCHEDULE STATE ---
     const [selectedClassTab, setSelectedClassTab] = useState("Kelas 1");
@@ -73,7 +76,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     let width = img.width;
                     let height = img.height;
                     
-                    // Resize logic: Max 800px
                     const MAX_SIZE = 800;
                     if (width > height) {
                         if (width > MAX_SIZE) {
@@ -95,20 +97,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         return;
                     }
 
-                    // FIX: Clear canvas untuk memastikan tidak ada artefak
                     ctx.clearRect(0, 0, width, height);
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // FIX: Logika Penentuan Format Output
                     let outputMime = 'image/jpeg';
                     if (file.type === 'image/png' || file.type === 'image/webp') {
                         outputMime = 'image/webp'; 
                     }
 
-                    // Compress
                     let quality = 0.8;
                     let dataUrl = canvas.toDataURL(outputMime, quality);
-
                     const MAX_BASE64_LENGTH = 1000000; 
 
                     while (dataUrl.length > MAX_BASE64_LENGTH && quality > 0.1) {
@@ -117,7 +115,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     }
 
                     if (dataUrl.length > MAX_BASE64_LENGTH) {
-                        reject(new Error("Ukuran gambar terlalu besar meskipun sudah dikompres. Gunakan gambar lain."));
+                        reject(new Error("Ukuran gambar terlalu besar."));
                     } else {
                         resolve(dataUrl);
                     }
@@ -146,7 +144,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // --- AI GENERATION ---
     const handleGenerateAI = async () => {
         if (!editingNews?.title || !editingNews?.image) {
-            alert("Mohon isi Judul dan Upload Foto terlebih dahulu agar AI bisa menganalisisnya.");
+            alert("Mohon isi Judul dan Upload Foto terlebih dahulu.");
             return;
         }
 
@@ -159,7 +157,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 content: result.content
             }));
         } catch (error: any) {
-            alert("Gagal menghasilkan berita dengan AI: " + error.message);
+            alert("Gagal AI: " + error.message);
         } finally {
             setIsGeneratingAI(false);
         }
@@ -182,14 +180,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
             setEditingNews(null);
         } catch (error: any) {
-            alert(`Gagal menyimpan berita: ${error.message}`);
+            alert(`Gagal: ${error.message}`);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteNews = async (id: string | number) => {
-        if (!confirm("Yakin hapus berita ini?")) return;
+        if (!confirm("Hapus berita ini?")) return;
         setLoading(true);
         try {
             await deleteDoc(doc(db, "news", String(id)));
@@ -217,19 +215,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
             setEditingTeacher(null);
         } catch (error: any) {
-            alert(`Gagal menyimpan data guru: ${error.message}`);
+            alert(`Gagal: ${error.message}`);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteTeacher = async (id: string | number) => {
-        if (!confirm("Yakin hapus data guru ini?")) return;
+        if (!confirm("Hapus data guru?")) return;
         try {
             await deleteDoc(doc(db, "teachers", String(id)));
             setTeachersData(prev => prev.filter(item => item.id !== id));
         } catch (error) {
-            alert("Gagal menghapus data guru");
+            alert("Gagal menghapus data");
         }
     };
 
@@ -249,14 +247,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
             setEditingGallery(null);
         } catch (error: any) {
-             alert(`Gagal menyimpan foto: ${error.message}`);
+             alert(`Gagal: ${error.message}`);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteGallery = async (id: string | number) => {
-        if (!confirm("Hapus foto ini?")) return;
+        if (!confirm("Hapus foto?")) return;
         try {
             await deleteDoc(doc(db, "gallery", String(id)));
             setGalleryData(prev => prev.filter(item => item.id !== id));
@@ -269,7 +267,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setLoading(true);
         try {
             await setDoc(doc(db, "school_profile", "main"), schoolProfile, { merge: true });
-            alert("Profil sekolah berhasil disimpan!");
+            alert("Profil berhasil disimpan!");
         } catch (error: any) {
             alert("Gagal menyimpan profil.");
         } finally {
@@ -278,7 +276,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     const handleDeleteSuggestion = async (id: string) => {
-        if (!confirm("Hapus pesan ini dari kotak masuk?")) return;
+        if (!confirm("Hapus pesan?")) return;
         try {
             await deleteDoc(doc(db, "suggestions", id));
             setSuggestionsData(prev => prev.filter(s => s.id !== id));
@@ -287,16 +285,64 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
+    const NavButton = ({ tab, label, icon }: { tab: TabType, label: string, icon: string }) => (
+        <button 
+            onClick={() => { setActiveTab(tab); setIsSidebarOpen(false); }} 
+            className={`w-full text-left px-4 py-3 md:py-2 rounded-lg flex items-center gap-3 transition-colors
+            ${activeTab === tab 
+                ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
+                : 'hover:bg-slate-800 text-slate-300'}`}
+        >
+            <span className="text-lg">{icon}</span> {label}
+            {tab === 'suggestions' && suggestionsData.length > 0 && (
+                <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-auto">{suggestionsData.length}</span>
+            )}
+        </button>
+    );
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center md:p-4">
+            {/* Main Container - Full Screen on Mobile, Card on Desktop */}
+            <div className="bg-white w-full h-full md:h-[90vh] md:max-w-6xl md:rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden relative">
                 
+                {/* Mobile Header (Only visible on mobile) */}
+                <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shrink-0 z-30">
+                    <div className="flex items-center gap-2">
+                         <span className="text-xl">🛠️</span>
+                         <h2 className="font-bold">Admin Panel</h2>
+                    </div>
+                    <div className="flex gap-2">
+                        {isAuthenticated && (
+                             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 bg-white/10 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                                </svg>
+                             </button>
+                        )}
+                        <button onClick={onClose} className="p-2 bg-red-500/20 text-red-400 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Sidebar Overlay (Mobile) */}
+                {isSidebarOpen && (
+                    <div 
+                        className="absolute inset-0 bg-black/50 z-20 md:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    ></div>
+                )}
+
                 {/* Sidebar */}
-                <div className="w-64 bg-slate-900 text-white flex flex-col shrink-0">
-                    <div className="p-6 border-b border-slate-700">
+                <div className={`
+                    absolute md:static inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white flex flex-col shrink-0 transform transition-transform duration-300
+                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                `}>
+                    <div className="p-6 border-b border-slate-700 hidden md:block">
                         <h2 className="font-bold text-xl tracking-tight">Admin Panel</h2>
                         <p className="text-slate-400 text-xs">SDN Tempurejo 1</p>
                     </div>
@@ -304,33 +350,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {!isAuthenticated ? (
                         <div className="p-4 text-sm text-slate-400">Silakan login</div>
                     ) : (
-                        <nav className="flex-grow p-4 space-y-2">
-                            <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'dashboard' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>📊</span> Dashboard
-                            </button>
-                            <button onClick={() => setActiveTab('suggestions')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'suggestions' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>📬</span> Kotak Masuk
-                                {suggestionsData.length > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-auto">{suggestionsData.length}</span>}
-                            </button>
-                            <button onClick={() => setActiveTab('identity')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'identity' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>🏫</span> Identitas
-                            </button>
-                            <button onClick={() => setActiveTab('news')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'news' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>📰</span> Berita
-                            </button>
-                            <button onClick={() => setActiveTab('schedules')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'schedules' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>📅</span> Jadwal
-                            </button>
-                            <button onClick={() => setActiveTab('teachers')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'teachers' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>👨‍🏫</span> Guru
-                            </button>
-                            <button onClick={() => setActiveTab('gallery')} className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${activeTab === 'gallery' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'hover:bg-slate-800 text-slate-300'}`}>
-                                <span>📸</span> Galeri
-                            </button>
+                        <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
+                            <NavButton tab="dashboard" label="Dashboard" icon="📊" />
+                            <NavButton tab="suggestions" label="Kotak Masuk" icon="📬" />
+                            <NavButton tab="identity" label="Identitas" icon="🏫" />
+                            <NavButton tab="news" label="Berita" icon="📰" />
+                            <NavButton tab="schedules" label="Jadwal" icon="📅" />
+                            <NavButton tab="teachers" label="Guru" icon="👨‍🏫" />
+                            <NavButton tab="gallery" label="Galeri" icon="📸" />
                         </nav>
                     )}
 
-                    <div className="p-4 border-t border-slate-700">
+                    <div className="p-4 border-t border-slate-700 hidden md:block">
                         <button onClick={onClose} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors w-full px-4 py-2 hover:bg-red-500/10 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                             Keluar
@@ -338,11 +369,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                 </div>
 
-                {/* Main Content */}
-                <div className="flex-grow bg-slate-50 overflow-y-auto p-8">
+                {/* Main Content Area */}
+                <div className="flex-grow bg-slate-50 overflow-y-auto p-4 md:p-8 w-full">
                     {!isAuthenticated ? (
                         <div className="h-full flex flex-col items-center justify-center">
-                            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100">
+                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100">
                                 <div className="text-center mb-8">
                                     <div className="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🔐</div>
                                     <h3 className="text-2xl font-bold text-slate-800">Login Pengelola</h3>
@@ -371,66 +402,50 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             {/* --- TAB: DASHBOARD --- */}
                             {activeTab === 'dashboard' && (
                                 <div className="animate-in fade-in duration-500">
-                                    <h2 className="text-3xl font-bold mb-2 text-slate-800">Selamat Datang, Admin! 👋</h2>
-                                    <p className="text-slate-500 mb-8">Ringkasan data website sekolah saat ini.</p>
+                                    <h2 className="text-2xl md:text-3xl font-bold mb-2 text-slate-800">Selamat Datang! 👋</h2>
+                                    <p className="text-slate-500 mb-8 text-sm md:text-base">Ringkasan data website sekolah saat ini.</p>
                                     
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                        {/* Card Suggestions (New) */}
-                                        <div className="bg-gradient-to-br from-purple-500 to-violet-600 p-6 rounded-2xl shadow-lg shadow-purple-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                                        <div className="bg-gradient-to-br from-purple-500 to-violet-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
                                             <div className="relative z-10">
-                                                <h3 className="text-purple-100 text-sm font-bold uppercase tracking-wider mb-1">Kritik & Saran</h3>
-                                                <p className="text-5xl font-black">{suggestionsData.length}</p>
-                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-purple-50">
-                                                    <span>Pesan masuk</span>
-                                                </div>
+                                                <h3 className="text-purple-100 text-xs font-bold uppercase tracking-wider mb-1">Pesan Masuk</h3>
+                                                <p className="text-4xl md:text-5xl font-black">{suggestionsData.length}</p>
                                             </div>
-                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">📬</div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-8xl">📬</div>
                                         </div>
 
-                                        {/* Card 1: Berita */}
-                                        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
                                             <div className="relative z-10">
-                                                <h3 className="text-emerald-100 text-sm font-bold uppercase tracking-wider mb-1">Total Berita</h3>
-                                                <p className="text-5xl font-black">{newsData.length}</p>
-                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-emerald-50">
-                                                    <span>Terakhir update: Hari ini</span>
-                                                </div>
+                                                <h3 className="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-1">Berita</h3>
+                                                <p className="text-4xl md:text-5xl font-black">{newsData.length}</p>
                                             </div>
-                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">📰</div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-8xl">📰</div>
                                         </div>
 
-                                        {/* Card 2: Guru */}
-                                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl shadow-lg shadow-blue-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
                                             <div className="relative z-10">
-                                                <h3 className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-1">Total Guru</h3>
-                                                <p className="text-5xl font-black">{teachersData.length}</p>
-                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-blue-50">
-                                                    <span>Data aktif</span>
-                                                </div>
+                                                <h3 className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Guru</h3>
+                                                <p className="text-4xl md:text-5xl font-black">{teachersData.length}</p>
                                             </div>
-                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">👨‍🏫</div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-8xl">👨‍🏫</div>
                                         </div>
 
-                                        {/* Card 3: Galeri */}
-                                        <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl shadow-lg shadow-amber-500/20 text-white relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
                                             <div className="relative z-10">
-                                                <h3 className="text-amber-100 text-sm font-bold uppercase tracking-wider mb-1">Foto Galeri</h3>
-                                                <p className="text-5xl font-black">{galleryData.length}</p>
-                                                <div className="mt-4 pt-4 border-t border-white/20 flex items-center text-sm font-medium text-amber-50">
-                                                    <span>Dokumentasi kegiatan</span>
-                                                </div>
+                                                <h3 className="text-amber-100 text-xs font-bold uppercase tracking-wider mb-1">Foto</h3>
+                                                <p className="text-4xl md:text-5xl font-black">{galleryData.length}</p>
                                             </div>
-                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform duration-500">📸</div>
+                                            <div className="absolute -right-4 -bottom-4 text-white/10 text-8xl">📸</div>
                                         </div>
                                     </div>
                                     
                                     <div className="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                                         <h3 className="font-bold text-slate-800 mb-4">Akses Cepat</h3>
-                                        <div className="flex gap-4">
-                                            <button onClick={() => setActiveTab('suggestions')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
+                                        <div className="flex flex-col md:flex-row gap-4">
+                                            <button onClick={() => setActiveTab('suggestions')} className="px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors text-left">
                                                 📬 Cek Kotak Masuk
                                             </button>
-                                            <button onClick={() => setActiveTab('news')} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors">
+                                            <button onClick={() => setActiveTab('news')} className="px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-bold transition-colors text-left">
                                                 + Tulis Berita
                                             </button>
                                         </div>
@@ -438,7 +453,298 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </div>
                             )}
 
-                             {/* --- TAB: GURU --- */}
+                            {/* --- TAB: SUGGESTIONS --- */}
+                            {activeTab === 'suggestions' && (
+                                <div>
+                                    <h2 className="text-2xl font-bold mb-6">Kotak Masuk</h2>
+                                    {suggestionsData.length === 0 ? (
+                                        <div className="text-center py-20 bg-white rounded-xl border-2 border-dashed border-slate-200">
+                                            <div className="text-6xl mb-4 opacity-20">📭</div>
+                                            <p className="text-slate-400">Belum ada pesan masuk.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {suggestionsData.map((msg) => (
+                                                <div key={msg.id} className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-100">
+                                                    <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
+                                                        <div className="flex gap-3 items-center">
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shrink-0
+                                                                ${msg.type === 'Saran' ? 'bg-blue-100 text-blue-600' : 
+                                                                  msg.type === 'Kritik' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                                                {msg.type === 'Saran' ? '💡' : msg.type === 'Kritik' ? '⚠️' : '❓'}
+                                                            </div>
+                                                            <div className="overflow-hidden">
+                                                                <h4 className="font-bold text-slate-800 truncate">{msg.name}</h4>
+                                                                <p className="text-xs text-slate-500 truncate">{msg.date} • {msg.email || 'Tanpa kontak'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleDeleteSuggestion(msg.id)}
+                                                            className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full self-end md:self-auto"
+                                                            title="Hapus Pesan"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">
+                                                        {msg.message}
+                                                    </div>
+                                                    <div className="mt-3 flex justify-end">
+                                                        <a 
+                                                            href={`mailto:${msg.email}`} 
+                                                            className={`text-xs font-bold text-brand-primary hover:underline flex items-center gap-1 ${!msg.email ? 'pointer-events-none opacity-50' : ''}`}
+                                                        >
+                                                            ↩️ Balas via Email
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* --- TAB: BERITA --- */}
+                            {activeTab === 'news' && (
+                                <div>
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                        <h2 className="text-2xl font-bold">Kelola Berita</h2>
+                                        <button 
+                                            onClick={() => setEditingNews({ title: '', date: '', category: 'Pengumuman', summary: '', content: '', image: '' })}
+                                            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors w-full md:w-auto"
+                                        >
+                                            + Tambah Berita
+                                        </button>
+                                    </div>
+
+                                    {editingNews && (
+                                        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+                                            <h3 className="font-bold mb-4">{editingNews.id ? 'Edit Berita' : 'Tambah Berita Baru'}</h3>
+                                            <form onSubmit={handleSaveNews} className="space-y-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Judul</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingNews.title} 
+                                                            onChange={e => setEditingNews({...editingNews, title: e.target.value})}
+                                                            className="w-full border rounded p-2" required 
+                                                            placeholder="Contoh: Kegiatan Maulid Nabi 2025"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Tanggal</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingNews.date} 
+                                                            onChange={e => setEditingNews({...editingNews, date: e.target.value})}
+                                                            className="w-full border rounded p-2" placeholder="Contoh: 12 Mei 2025" required 
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">Kategori</label>
+                                                        <select 
+                                                            value={editingNews.category} 
+                                                            onChange={e => setEditingNews({...editingNews, category: e.target.value})}
+                                                            className="w-full border rounded p-2"
+                                                        >
+                                                            <option value="Pengumuman">Pengumuman</option>
+                                                            <option value="Prestasi">Prestasi</option>
+                                                            <option value="Kegiatan">Kegiatan</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                         <label className="block text-sm font-medium mb-1">Upload Foto</label>
+                                                         <input 
+                                                            type="file" 
+                                                            accept="image/*"
+                                                            onChange={(e) => handleImageUpload(e, 'image', setEditingNews, editingNews)}
+                                                            className="w-full text-sm"
+                                                         />
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex justify-end border-b border-slate-100 pb-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleGenerateAI}
+                                                        disabled={isGeneratingAI || compressing || !editingNews.title || !editingNews.image}
+                                                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md disabled:opacity-50"
+                                                    >
+                                                        {isGeneratingAI ? 'Sedang Menulis...' : '✨ Buat Isi Berita dengan AI'}
+                                                    </button>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Ringkasan</label>
+                                                    <textarea 
+                                                        value={editingNews.summary} 
+                                                        onChange={e => setEditingNews({...editingNews, summary: e.target.value})}
+                                                        className="w-full border rounded p-2 h-20" required 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Isi Lengkap</label>
+                                                    <textarea 
+                                                        value={editingNews.content || ''} 
+                                                        onChange={e => setEditingNews({...editingNews, content: e.target.value})}
+                                                        className="w-full border rounded p-2 h-40" 
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <button type="button" onClick={() => setEditingNews(null)} className="px-4 py-2 text-slate-500">Batal</button>
+                                                    <button 
+                                                        type="submit" 
+                                                        disabled={loading || compressing || isGeneratingAI}
+                                                        className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
+                                                    >
+                                                        {loading ? 'Menyimpan...' : 'Simpan'}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                        {newsData.map(news => (
+                                            <div key={news.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center gap-4">
+                                                <div className="flex items-center gap-4">
+                                                     <img src={news.image} alt="" className="w-16 h-16 object-cover rounded-md bg-slate-100 shrink-0" />
+                                                     <div className="flex-grow">
+                                                        <h4 className="font-bold line-clamp-1">{news.title}</h4>
+                                                        <p className="text-xs text-slate-500">{news.date} • {news.category}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 justify-end mt-2 md:mt-0 md:ml-auto">
+                                                    <button onClick={() => setEditingNews(news)} className="text-blue-500 text-sm hover:underline">Edit</button>
+                                                    <button onClick={() => handleDeleteNews(news.id)} className="text-red-500 text-sm hover:underline">Hapus</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                             {/* --- TAB: JADWAL (SCHEDULES) --- */}
+                             {activeTab === 'schedules' && (
+                                <div>
+                                    {/* Class Selector - Scrollable on mobile */}
+                                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+                                        {schedulesData.map(s => (
+                                            <button 
+                                                key={s.className}
+                                                onClick={() => setSelectedClassTab(s.className)}
+                                                className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${selectedClassTab === s.className ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30' : 'bg-white text-slate-600 border border-slate-200'}`}
+                                            >
+                                                {s.className}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Schedule Editor */}
+                                    {(() => {
+                                        const currentScheduleIndex = schedulesData.findIndex(s => s.className === selectedClassTab);
+                                        const currentSchedule = schedulesData[currentScheduleIndex];
+
+                                        if (!currentSchedule) return <div className="p-8 text-center text-slate-400">Data jadwal tidak ditemukan.</div>;
+
+                                        const handleUpdateSchedule = (dayIndex: number, slotIndex: number, field: 'time' | 'subject', value: string) => {
+                                            const newSchedules = [...schedulesData];
+                                            newSchedules[currentScheduleIndex].days[dayIndex].schedule[slotIndex][field] = value;
+                                            setSchedulesData(newSchedules);
+                                        };
+
+                                        const handleAddSlot = (dayIndex: number) => {
+                                            const newSchedules = [...schedulesData];
+                                            newSchedules[currentScheduleIndex].days[dayIndex].schedule.push({ time: "00:00 - 00:00", subject: "Mata Pelajaran" });
+                                            setSchedulesData(newSchedules);
+                                        };
+
+                                        const handleDeleteSlot = (dayIndex: number, slotIndex: number) => {
+                                             const newSchedules = [...schedulesData];
+                                             newSchedules[currentScheduleIndex].days[dayIndex].schedule.splice(slotIndex, 1);
+                                             setSchedulesData(newSchedules);
+                                        };
+
+                                        const handleSaveScheduleToDB = async () => {
+                                            setLoading(true);
+                                            try {
+                                                await setDoc(doc(db, "schedules", currentSchedule.className), currentSchedule);
+                                                alert(`Jadwal ${currentSchedule.className} berhasil disimpan!`);
+                                            } catch (error) {
+                                                console.error(error);
+                                                alert("Gagal menyimpan jadwal.");
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        };
+
+                                        return (
+                                            <div>
+                                                <div className="flex justify-between items-center mb-6">
+                                                    <h3 className="font-bold text-xl text-slate-800">{currentSchedule.className}</h3>
+                                                    <button 
+                                                        onClick={handleSaveScheduleToDB}
+                                                        disabled={loading}
+                                                        className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm"
+                                                    >
+                                                        {loading ? '...' : 'Simpan'}
+                                                    </button>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+                                                    {currentSchedule.days.map((day, dayIndex) => (
+                                                        <div key={day.dayName} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                                            <h4 className="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 flex justify-between items-center">
+                                                                {day.dayName}
+                                                                <span className="text-xs text-slate-400 font-normal">{day.schedule.length} Mapel</span>
+                                                            </h4>
+                                                            <div className="space-y-3">
+                                                                {day.schedule.map((slot, slotIndex) => (
+                                                                    <div key={slotIndex} className="flex gap-2 items-start group">
+                                                                        <div className="flex-grow space-y-1">
+                                                                            <input 
+                                                                                type="text" 
+                                                                                value={slot.time}
+                                                                                onChange={(e) => handleUpdateSchedule(dayIndex, slotIndex, 'time', e.target.value)}
+                                                                                className="w-full text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1"
+                                                                                placeholder="07:00 - 08:00"
+                                                                            />
+                                                                            <input 
+                                                                                type="text" 
+                                                                                value={slot.subject}
+                                                                                onChange={(e) => handleUpdateSchedule(dayIndex, slotIndex, 'subject', e.target.value)}
+                                                                                className="w-full text-sm font-semibold text-slate-800 border border-slate-200 rounded px-2 py-1"
+                                                                                placeholder="Nama Pelajaran"
+                                                                            />
+                                                                        </div>
+                                                                        <button 
+                                                                            onClick={() => handleDeleteSlot(dayIndex, slotIndex)}
+                                                                            className="text-red-300 hover:text-red-500 p-1 md:opacity-0 group-hover:opacity-100 transition-opacity self-center"
+                                                                        >
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                                <button 
+                                                                    onClick={() => handleAddSlot(dayIndex)}
+                                                                    className="w-full py-2 border-2 border-dashed border-slate-100 rounded-lg text-slate-400 text-xs font-bold hover:border-brand-primary hover:text-brand-primary transition-all mt-2"
+                                                                >
+                                                                    + Tambah Jam
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                             )}
+
+                            {/* --- TAB: GURU --- */}
                             {activeTab === 'teachers' && (
                                 <div>
                                      <div className="flex justify-between items-center mb-6">
@@ -452,10 +758,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
 
                                     {editingTeacher && (
-                                        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+                                        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
                                              <h3 className="font-bold mb-4">{editingTeacher.id ? 'Edit Guru' : 'Tambah Guru'}</h3>
                                              <form onSubmit={handleSaveTeacher} className="space-y-4">
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium mb-1">Nama Lengkap & Gelar</label>
                                                         <input 
@@ -475,7 +781,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium mb-1">NIP (Opsional)</label>
                                                         <input 
@@ -483,7 +789,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             value={editingTeacher.nip || ''} 
                                                             onChange={e => setEditingTeacher({...editingTeacher, nip: e.target.value})}
                                                             className="w-full border rounded p-2"
-                                                            placeholder="Contoh: 1980xxxx..."
                                                         />
                                                     </div>
                                                     <div>
@@ -493,18 +798,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             value={editingTeacher.education || ''} 
                                                             onChange={e => setEditingTeacher({...editingTeacher, education: e.target.value})}
                                                             className="w-full border rounded p-2"
-                                                            placeholder="Contoh: S1 PGSD Univ. X"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium mb-1">Motto Mengajar</label>
+                                                    <label className="block text-sm font-medium mb-1">Motto</label>
                                                     <input 
                                                         type="text" 
                                                         value={editingTeacher.motto || ''} 
                                                         onChange={e => setEditingTeacher({...editingTeacher, motto: e.target.value})}
                                                         className="w-full border rounded p-2"
-                                                        placeholder="Contoh: Belajar sepanjang hayat."
                                                     />
                                                 </div>
                                                 <div>
@@ -515,7 +818,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         onChange={(e) => handleImageUpload(e, 'image', setEditingTeacher, editingTeacher)}
                                                         className="w-full text-sm"
                                                      />
-                                                     {compressing && <span className="text-xs text-brand-primary font-bold animate-pulse">Sedang mengompres gambar...</span>}
                                                 </div>
                                                 <div className="flex justify-end gap-2">
                                                     <button type="button" onClick={() => setEditingTeacher(null)} className="px-4 py-2 text-slate-500">Batal</button>
@@ -524,7 +826,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         disabled={loading || compressing}
                                                         className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
                                                     >
-                                                        {loading ? 'Menyimpan...' : compressing ? 'Memproses Gambar...' : 'Simpan'}
+                                                        Simpan
                                                     </button>
                                                 </div>
                                              </form>
@@ -534,11 +836,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {teachersData.map(teacher => (
                                             <div key={teacher.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex items-center gap-4">
-                                                <img src={teacher.image} alt="" className="w-12 h-12 object-cover rounded-full bg-slate-100" />
+                                                <img src={teacher.image} alt="" className="w-12 h-12 object-cover rounded-full bg-slate-100 shrink-0" />
                                                 <div className="flex-grow">
-                                                    <h4 className="font-bold">{teacher.name}</h4>
-                                                    <p className="text-xs text-slate-500">{teacher.role}</p>
-                                                    {teacher.nip && <p className="text-[10px] text-slate-400 mt-1">NIP: {teacher.nip}</p>}
+                                                    <h4 className="font-bold line-clamp-1">{teacher.name}</h4>
+                                                    <p className="text-xs text-slate-500 line-clamp-1">{teacher.role}</p>
+                                                    {teacher.nip && <p className="text-[10px] text-slate-400 mt-1 truncate">NIP: {teacher.nip}</p>}
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <button onClick={() => setEditingTeacher(teacher)} className="text-blue-500 text-sm">Edit</button>
@@ -550,138 +852,185 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </div>
                             )}
 
-                            {/* --- TAB: BERITA, JADWAL, DLL (Disederhanakan untuk singkatnya kode, tapi tetap ada di atas) --- */}
-                            {/* ... (Other Tabs code remains same as previous update) ... */}
-                            {/* --- TAB: BERITA --- */}
-                            {activeTab === 'news' && (
-                                <div>
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-2xl font-bold">Kelola Berita</h2>
-                                        <button 
-                                            onClick={() => setEditingNews({ title: '', date: '', category: 'Pengumuman', summary: '', content: '', image: '' })}
-                                            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors"
-                                        >
-                                            + Tambah Berita
-                                        </button>
-                                    </div>
-                                     {editingNews && (
-                                        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
-                                            <h3 className="font-bold mb-4">{editingNews.id ? 'Edit Berita' : 'Tambah Berita Baru'}</h3>
-                                            <form onSubmit={handleSaveNews} className="space-y-4">
-                                                {/* Form fields same as before */}
-                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-1">Judul</label>
-                                                        <input type="text" value={editingNews.title} onChange={e => setEditingNews({...editingNews, title: e.target.value})} className="w-full border rounded p-2" required />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-1">Tanggal</label>
-                                                        <input type="text" value={editingNews.date} onChange={e => setEditingNews({...editingNews, date: e.target.value})} className="w-full border rounded p-2" required />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-1">Kategori</label>
-                                                        <select value={editingNews.category} onChange={e => setEditingNews({...editingNews, category: e.target.value})} className="w-full border rounded p-2">
-                                                            <option value="Pengumuman">Pengumuman</option>
-                                                            <option value="Prestasi">Prestasi</option>
-                                                            <option value="Kegiatan">Kegiatan</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                         <label className="block text-sm font-medium mb-1">Upload Foto</label>
-                                                         <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'image', setEditingNews, editingNews)} className="w-full text-sm" />
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium mb-1">Ringkasan</label>
-                                                    <textarea value={editingNews.summary} onChange={e => setEditingNews({...editingNews, summary: e.target.value})} className="w-full border rounded p-2 h-20" required />
-                                                </div>
-                                                 <div>
-                                                    <label className="block text-sm font-medium mb-1">Isi Berita Lengkap</label>
-                                                    <textarea value={editingNews.content || ''} onChange={e => setEditingNews({...editingNews, content: e.target.value})} className="w-full border rounded p-2 h-40" />
-                                                </div>
-                                                <div className="flex justify-end gap-2">
-                                                    <button type="button" onClick={() => setEditingNews(null)} className="px-4 py-2 text-slate-500">Batal</button>
-                                                    <button type="submit" disabled={loading} className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark">{loading ? 'Simpan...' : 'Simpan'}</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    )}
-                                     <div className="space-y-3">
-                                        {newsData.map(news => (
-                                            <div key={news.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex items-center gap-4">
-                                                <img src={news.image} alt="" className="w-16 h-16 object-cover rounded-md bg-slate-100" />
-                                                <div className="flex-grow">
-                                                    <h4 className="font-bold">{news.title}</h4>
-                                                    <p className="text-xs text-slate-500">{news.date} • {news.category}</p>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => setEditingNews(news)} className="text-blue-500 text-sm hover:underline">Edit</button>
-                                                    <button onClick={() => handleDeleteNews(news.id)} className="text-red-500 text-sm hover:underline">Hapus</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                             {/* --- TAB: JADWAL --- */}
-                            {activeTab === 'schedules' && (
-                                <div>
-                                     {/* ... (Same as previous code for schedule selector and editor) ... */}
-                                      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                                        {schedulesData.map(s => (
-                                            <button key={s.className} onClick={() => setSelectedClassTab(s.className)} className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${selectedClassTab === s.className ? 'bg-brand-primary text-white shadow-lg' : 'bg-white text-slate-600 border'}`}>{s.className}</button>
-                                        ))}
-                                    </div>
-                                    {/* Schedule logic omitted for brevity, keeping same logic */}
-                                     <div className="p-4 bg-slate-50 rounded text-center text-slate-500">Fitur edit jadwal sudah diimplementasikan (lihat kode sebelumnya).</div>
-                                </div>
-                            )}
-
                              {/* --- TAB: GALERI --- */}
                              {activeTab === 'gallery' && (
                                 <div>
-                                    <div className="flex justify-between items-center mb-6">
+                                     <div className="flex justify-between items-center mb-6">
                                         <h2 className="text-2xl font-bold">Galeri Foto</h2>
-                                        <button onClick={() => setEditingGallery({ caption: '', category: 'Kegiatan', src: '' })} className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark">+ Tambah Foto</button>
+                                        <button 
+                                            onClick={() => setEditingGallery({ caption: '', category: 'Kegiatan', src: '' })}
+                                            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors"
+                                        >
+                                            + Tambah Foto
+                                        </button>
                                     </div>
-                                     {editingGallery && (
-                                        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+
+                                    {editingGallery && (
+                                        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
                                             <form onSubmit={handleSaveGallery} className="space-y-4">
-                                                {/* Form fields same as before */}
-                                                 <div><label className="block text-sm font-medium mb-1">Judul</label><input type="text" value={editingGallery.caption} onChange={e => setEditingGallery({...editingGallery, caption: e.target.value})} className="w-full border rounded p-2" required /></div>
-                                                 <div><label className="block text-sm font-medium mb-1">Kategori</label><select value={editingGallery.category} onChange={e => setEditingGallery({...editingGallery, category: e.target.value as any})} className="w-full border rounded p-2"><option value="Kegiatan">Kegiatan</option><option value="Fasilitas">Fasilitas</option><option value="Ekstrakurikuler">Ekstrakurikuler</option></select></div>
-                                                 <div><label className="block text-sm font-medium mb-1">Upload Foto</label><input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'src', setEditingGallery, editingGallery)} className="w-full text-sm" /></div>
-                                                <div className="flex justify-end gap-2"><button type="button" onClick={() => setEditingGallery(null)} className="px-4 py-2 text-slate-500">Batal</button><button type="submit" disabled={loading} className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark">{loading ? 'Simpan...' : 'Simpan'}</button></div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Judul / Caption</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={editingGallery.caption} 
+                                                        onChange={e => setEditingGallery({...editingGallery, caption: e.target.value})}
+                                                        className="w-full border rounded p-2" required 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Kategori</label>
+                                                    <select 
+                                                        value={editingGallery.category} 
+                                                        onChange={e => setEditingGallery({...editingGallery, category: e.target.value as any})}
+                                                        className="w-full border rounded p-2"
+                                                    >
+                                                        <option value="Kegiatan">Kegiatan</option>
+                                                        <option value="Fasilitas">Fasilitas</option>
+                                                        <option value="Ekstrakurikuler">Ekstrakurikuler</option>
+                                                        <option value="Akademik">Akademik</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                     <label className="block text-sm font-medium mb-1">Upload Foto</label>
+                                                     <input 
+                                                        type="file" 
+                                                        accept="image/*"
+                                                        onChange={(e) => handleImageUpload(e, 'src', setEditingGallery, editingGallery)}
+                                                        className="w-full text-sm"
+                                                     />
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <button type="button" onClick={() => setEditingGallery(null)} className="px-4 py-2 text-slate-500">Batal</button>
+                                                    <button 
+                                                        type="submit" 
+                                                        disabled={loading || compressing}
+                                                        className="bg-brand-primary text-white px-6 py-2 rounded hover:bg-brand-dark disabled:opacity-50"
+                                                    >
+                                                        Simpan
+                                                    </button>
+                                                </div>
                                             </form>
                                         </div>
                                     )}
+
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {galleryData.map(item => (
                                             <div key={item.id} className="group relative rounded-lg overflow-hidden aspect-square border border-slate-200">
                                                 <img src={item.src} alt={item.caption} className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white">
                                                     <p className="text-xs font-bold truncate">{item.caption}</p>
-                                                    <button onClick={() => handleDeleteGallery(item.id)} className="text-xs bg-red-500 px-2 py-1 rounded mt-2 self-end">Hapus</button>
+                                                    <div className="flex gap-2 mt-2 justify-end">
+                                                        <button onClick={() => handleDeleteGallery(item.id)} className="text-xs bg-red-500 px-2 py-1 rounded">Hapus</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                             )}
+                            )}
 
                             {/* --- TAB: IDENTITAS --- */}
                             {activeTab === 'identity' && (
                                 <div>
                                     <h2 className="text-2xl font-bold mb-6">Identitas Sekolah</h2>
-                                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                                        {/* Fields same as before */}
-                                        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-1">Nama Sekolah</label><input type="text" value={schoolProfile.name} onChange={e => setSchoolProfile({...schoolProfile, name: e.target.value})} className="w-full border rounded p-2" /></div></div>
-                                        <div><label className="block text-sm font-medium mb-1">Alamat</label><input type="text" value={schoolProfile.address} onChange={e => setSchoolProfile({...schoolProfile, address: e.target.value})} className="w-full border rounded p-2" /></div>
-                                         <div className="border-t pt-4 mt-2"><h4 className="font-bold mb-3 text-slate-700">Kontak</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-1">Email</label><input type="email" value={schoolProfile.email} onChange={e => setSchoolProfile({...schoolProfile, email: e.target.value})} className="w-full border rounded p-2" /></div></div></div>
-                                        <div className="flex justify-end pt-4"><button onClick={handleSaveProfile} disabled={loading} className="bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-dark">{loading ? 'Simpan...' : 'Simpan Perubahan'}</button></div>
+                                    <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">Nama Sekolah</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={schoolProfile.name} 
+                                                    onChange={e => setSchoolProfile({...schoolProfile, name: e.target.value})}
+                                                    className="w-full border rounded p-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Alamat Lengkap</label>
+                                            <input 
+                                                type="text" 
+                                                value={schoolProfile.address} 
+                                                onChange={e => setSchoolProfile({...schoolProfile, address: e.target.value})}
+                                                className="w-full border rounded p-2"
+                                            />
+                                        </div>
+                                        
+                                        {/* KONTAK & SOSMED SECTION */}
+                                        <div className="border-t pt-4 mt-2">
+                                            <h4 className="font-bold mb-3 text-slate-700">Kontak & Media Sosial</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Email</label>
+                                                    <input 
+                                                        type="email" 
+                                                        value={schoolProfile.email} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, email: e.target.value})}
+                                                        className="w-full border rounded p-2"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Facebook URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.facebook} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, facebook: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://facebook.com/..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Instagram URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.instagram} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, instagram: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://instagram.com/..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">TikTok URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.tiktok} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, tiktok: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://tiktok.com/@..."
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">YouTube URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={schoolProfile.socialMedia.youtube} 
+                                                        onChange={e => setSchoolProfile({...schoolProfile, socialMedia: {...schoolProfile.socialMedia, youtube: e.target.value}})}
+                                                        className="w-full border rounded p-2"
+                                                        placeholder="https://youtube.com/..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t pt-4 mt-4">
+                                            <h4 className="font-bold mb-2">Logo Sekolah</h4>
+                                            <div className="flex items-center gap-4">
+                                                {schoolProfile.logo && <img src={schoolProfile.logo} className="w-16 h-16 object-contain border rounded" />}
+                                                <input 
+                                                    type="file" 
+                                                    onChange={(e) => handleImageUpload(e, 'logo', setSchoolProfile, schoolProfile)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end pt-4">
+                                            <button 
+                                                onClick={handleSaveProfile}
+                                                disabled={loading || compressing}
+                                                className="bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-dark"
+                                            >
+                                                {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
