@@ -17,7 +17,8 @@ import NewsDetailPage from './components/NewsDetailPage';
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile } from './types';
 import { db } from './services/firebase';
-import { collection, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+// Added getDoc and deleteDoc for standardized profile handling
+import { collection, getDocs, addDoc, doc, setDoc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 
 function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -54,27 +55,50 @@ function App() {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        // 1. Check & Fetch Profile
-        const profileSnap = await getDocs(collection(db, "school_profile"));
-        if (!profileSnap.empty) {
-            const data = profileSnap.docs[0].data();
-            setSchoolProfile({
-                name: data.name || SCHOOL_NAME,
-                address: data.address || SCHOOL_ADDRESS,
-                phone: data.phone || SCHOOL_PHONE,
-                email: data.email || SCHOOL_EMAIL,
-                logo: data.logo || "",
-                logoDaerah: data.logoDaerah || "",
-                logoMapan: data.logoMapan || "",
+        // 1. Check & Fetch Profile (STANDARDIZED TO ID: 'main')
+        const mainDocRef = doc(db, "school_profile", "main");
+        const mainDocSnap = await getDoc(mainDocRef);
+
+        if (mainDocSnap.exists()) {
+            // Jika dokumen 'main' sudah ada (hasil save dari Admin), gunakan ini.
+            const data = mainDocSnap.data();
+            setSchoolProfile(prev => ({
+                ...prev,
+                ...data,
+                // Merge nested socialMedia object to prevent overwrite if keys are missing in DB
                 socialMedia: {
-                    facebook: data.socialMedia?.facebook || "",
-                    instagram: data.socialMedia?.instagram || "",
-                    youtube: data.socialMedia?.youtube || "",
-                    tiktok: data.socialMedia?.tiktok || ""
+                    ...prev.socialMedia,
+                    ...(data.socialMedia || {})
                 }
-            });
+            }));
         } else {
-            await addDoc(collection(db, "school_profile"), schoolProfile);
+            // FALLBACK: Cek apakah ada dokumen lama dengan ID acak (Legacy data)
+            const profileSnap = await getDocs(collection(db, "school_profile"));
+            
+            if (!profileSnap.empty) {
+                const legacyDoc = profileSnap.docs[0]; // Ambil yang pertama
+                const data = legacyDoc.data();
+                
+                // Update state
+                setSchoolProfile(prev => ({
+                    ...prev,
+                    ...data,
+                    socialMedia: {
+                        ...prev.socialMedia,
+                        ...(data.socialMedia || {})
+                    }
+                }));
+
+                // MIGRASI OTOMATIS:
+                // Simpan data ini ke 'main' agar sinkron dengan Admin Panel
+                await setDoc(doc(db, "school_profile", "main"), data);
+                // Hapus data lama yang ID-nya acak agar tidak bingung kedepannya
+                await deleteDoc(legacyDoc.ref);
+                console.log("Database Profil berhasil dimigrasi ke standar baru.");
+            } else {
+                // Jika belum ada data sama sekali, buat baru dengan ID 'main'
+                await setDoc(doc(db, "school_profile", "main"), schoolProfile);
+            }
         }
 
         // 2. Check & Fetch News
@@ -83,7 +107,6 @@ function App() {
             const fetchedNews = newsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             
             // SYNC FIX FOR NEWS (PPDB YEAR)
-            // Automatically update old PPDB news to new year if found
             const ppdbNews = fetchedNews.find((n: any) => n.title.includes("Penerimaan Siswa Baru"));
             const targetPPDB = NEWS.find(n => n.title.includes("Penerimaan Siswa Baru"));
 
@@ -94,7 +117,6 @@ function App() {
                      date: targetPPDB.date,
                      content: targetPPDB.content
                  });
-                 // Update local object to reflect in UI immediately
                  ppdbNews.title = targetPPDB.title;
                  ppdbNews.date = targetPPDB.date;
                  ppdbNews.content = targetPPDB.content;
@@ -115,14 +137,11 @@ function App() {
         if (!teachersSnap.empty) {
             let fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
             
-            // SYNC FIX: Ensure DB data matches constants for critical fields (Name, Image)
-            // This fixes the issue where old data (picsum images) persists in Firebase
+            // SYNC FIX: Ensure DB data matches constants for critical fields
             for (const tConstant of TEACHERS) {
-                // Match by Role since IDs are generated in Firebase
                 const tDB = fetchedTeachers.find((t: any) => t.role === tConstant.role);
                 
                 if (tDB) {
-                    // Check if updates are needed
                     const nameChanged = tDB.name !== tConstant.name;
                     const imageChanged = tDB.image !== tConstant.image;
 
@@ -132,14 +151,12 @@ function App() {
                              name: tConstant.name,
                              image: tConstant.image
                          });
-                         // Update local state to reflect change immediately
                          tDB.name = tConstant.name;
                          tDB.image = tConstant.image;
                     }
                 }
             }
 
-            // Sort logic: Put 'Kepala Sekolah' first, then others
             fetchedTeachers.sort((a, b) => {
                 if (a.role === "Kepala Sekolah") return -1;
                 if (b.role === "Kepala Sekolah") return 1;
@@ -184,7 +201,6 @@ function App() {
 
       } catch (error) {
         console.error("Error connecting to Firebase:", error);
-        // alert("Gagal terhubung ke database. Pastikan config firebase.ts sudah benar.");
       } finally {
         setLoading(false);
       }

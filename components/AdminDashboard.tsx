@@ -262,8 +262,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const handleSaveProfile = async () => {
         setLoading(true);
         try {
-            // Find existing profile doc or create new
-            await setDoc(doc(db, "school_profile", "main"), schoolProfile);
+            // Find existing profile doc or create new.
+            // Using merge: true ensures that if the document exists, we update fields; 
+            // if not, we create it.
+            await setDoc(doc(db, "school_profile", "main"), schoolProfile, { merge: true });
             alert("Profil sekolah berhasil disimpan!");
         } catch (error: any) {
             console.error(error);
