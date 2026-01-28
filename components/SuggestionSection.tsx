@@ -35,7 +35,6 @@ const SuggestionSection: React.FC<SuggestionSectionProps> = ({ schoolProfile }) 
       });
 
       // 2. Trigger Email Client (Agar terkirim ke email sekolah)
-      // Ini akan membuka aplikasi email default pengguna
       const subject = `[Website Sekolah] ${formData.type} dari ${formData.name}`;
       const body = `Nama Pengirim: ${formData.name}\nKontak: ${formData.email}\nJenis: ${formData.type}\n\nIsi Pesan:\n${formData.message}`;
       
@@ -43,14 +42,16 @@ const SuggestionSection: React.FC<SuggestionSectionProps> = ({ schoolProfile }) 
       
       // Reset form
       setFormData({ name: '', email: '', type: 'Saran', message: '' });
-      alert("Terima kasih! Masukan Anda telah tersimpan di sistem.");
+      
+      // PENTING: Beritahu user dengan jelas
+      alert("Pesan tersimpan di sistem Database Sekolah!\n\nSelanjutnya, aplikasi EMAIL Anda akan terbuka otomatis. Mohon tekan tombol 'KIRIM' (SEND) di aplikasi email tersebut agar pesan sampai ke Inbox Email Sekolah.");
       
       // Buka email client
       window.location.href = mailtoLink;
 
     } catch (error) {
       console.error("Error sending suggestion:", error);
-      alert("Gagal mengirim saran. Silakan coba lagi.");
+      alert("Gagal menyimpan saran. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ const SuggestionSection: React.FC<SuggestionSectionProps> = ({ schoolProfile }) 
               Kritik & Saran
             </h2>
             <p className="text-slate-500 mb-6 leading-relaxed">
-              Kami sangat menghargai masukan Anda demi kemajuan sekolah. Silakan sampaikan kritik, saran, atau pertanyaan Anda. Pesan akan tersimpan di sistem kami dan diteruskan ke email sekolah.
+              Kami sangat menghargai masukan Anda demi kemajuan sekolah. Silakan sampaikan kritik, saran, atau pertanyaan Anda. Pesan akan tersimpan di sistem admin kami.
             </p>
             
             <div className="space-y-4">
@@ -156,7 +157,7 @@ const SuggestionSection: React.FC<SuggestionSectionProps> = ({ schoolProfile }) 
                     )}
                 </button>
                 <p className="text-center text-[10px] text-slate-400">
-                    *Pesan akan tersimpan di sistem admin & membuka aplikasi email Anda.
+                    *Pesan akan otomatis masuk ke Admin Panel.
                 </p>
             </form>
           </div>

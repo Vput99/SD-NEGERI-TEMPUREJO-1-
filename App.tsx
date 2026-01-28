@@ -9,7 +9,7 @@ import ExamSection from './components/ExamSection';
 import ExamDetailPage from './components/ExamDetailPage'; 
 import GallerySection from './components/GallerySection';
 import PPDBSection from './components/PPDBSection';
-import SuggestionSection from './components/SuggestionSection'; // Import Suggestion Box
+import SuggestionSection from './components/SuggestionSection'; 
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
 import AdminDashboard from './components/AdminDashboard';
@@ -18,7 +18,7 @@ import NewsDetailPage from './components/NewsDetailPage';
 import { NEWS, TEACHERS, CLASS_SCHEDULES, GALLERY, SCHOOL_NAME, SCHOOL_ADDRESS, SCHOOL_EMAIL, SCHOOL_PHONE } from './constants';
 import { NewsItem, Teacher, ClassSchedule, GalleryImage, SchoolProfile, Suggestion } from './types';
 import { db } from './services/firebase';
-import { collection, getDocs, addDoc, doc, setDoc, updateDoc, getDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, setDoc, updateDoc, getDoc, deleteDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -50,13 +50,13 @@ function App() {
   const [teachersData, setTeachersData] = useState<Teacher[]>([]);
   const [schedulesData, setSchedulesData] = useState<ClassSchedule[]>([]);
   const [galleryData, setGalleryData] = useState<GalleryImage[]>([]);
-  const [suggestionsData, setSuggestionsData] = useState<Suggestion[]>([]); // State for Suggestions
+  const [suggestionsData, setSuggestionsData] = useState<Suggestion[]>([]); 
 
-  // FETCH DATA FROM FIREBASE
+  // --- 1. FETCH INITIAL DATA (One time load) ---
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        // 1. Check & Fetch Profile (STANDARDIZED TO ID: 'main')
+        // A. Profile
         const mainDocRef = doc(db, "school_profile", "main");
         const mainDocSnap = await getDoc(mainDocRef);
 
@@ -65,25 +65,15 @@ function App() {
             setSchoolProfile(prev => ({
                 ...prev,
                 ...data,
-                socialMedia: {
-                    ...prev.socialMedia,
-                    ...(data.socialMedia || {})
-                }
+                socialMedia: { ...prev.socialMedia, ...(data.socialMedia || {}) }
             }));
         } else {
+            // Fallback & Migration Logic
             const profileSnap = await getDocs(collection(db, "school_profile"));
-            
             if (!profileSnap.empty) {
                 const legacyDoc = profileSnap.docs[0];
                 const data = legacyDoc.data();
-                setSchoolProfile(prev => ({
-                    ...prev,
-                    ...data,
-                    socialMedia: {
-                        ...prev.socialMedia,
-                        ...(data.socialMedia || {})
-                    }
-                }));
+                setSchoolProfile(prev => ({ ...prev, ...data, socialMedia: { ...prev.socialMedia, ...(data.socialMedia || {}) } }));
                 await setDoc(doc(db, "school_profile", "main"), data);
                 await deleteDoc(legacyDoc.ref);
             } else {
@@ -91,7 +81,7 @@ function App() {
             }
         }
 
-        // 2. Check & Fetch News
+        // B. News
         const newsSnap = await getDocs(collection(db, "news"));
         if (!newsSnap.empty) {
             const fetchedNews = newsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
@@ -105,11 +95,18 @@ function App() {
             setNewsData(newSnap.docs.map(d => ({ ...d.data(), id: d.id } as any)));
         }
 
-        // 3. Check & Fetch Teachers
+        // C. Teachers
         const teachersSnap = await getDocs(collection(db, "teachers"));
         if (!teachersSnap.empty) {
             let fetchedTeachers = teachersSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
-            // Ensure no legacy data issues
+            
+            // Cleanup Logic for Siti Aminah (if still exists)
+            const sitiAminah = fetchedTeachers.find((t: any) => t.name === "Siti Aminah, S.Pd");
+            if (sitiAminah) {
+                await deleteDoc(doc(db, "teachers", sitiAminah.id));
+                fetchedTeachers = fetchedTeachers.filter((t: any) => t.id !== sitiAminah.id);
+            }
+
             fetchedTeachers.sort((a, b) => {
                 if (a.role === "Kepala Sekolah") return -1;
                 if (b.role === "Kepala Sekolah") return 1;
@@ -125,7 +122,7 @@ function App() {
              setTeachersData(newSnap.docs.map(d => ({ ...d.data(), id: d.id } as any)));
         }
 
-        // 4. Check & Fetch Gallery
+        // D. Gallery
         const gallerySnap = await getDocs(collection(db, "gallery"));
         if (!gallerySnap.empty) {
             const fetchedGallery = gallerySnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
@@ -139,7 +136,7 @@ function App() {
             setGalleryData(newSnap.docs.map(d => ({ ...d.data(), id: d.id } as any)));
         }
 
-        // 5. Check & Fetch Schedules
+        // E. Schedules
         const scheduleSnap = await getDocs(collection(db, "schedules"));
         if (!scheduleSnap.empty) {
             const fetchedSchedules = scheduleSnap.docs.map(d => d.data() as ClassSchedule);
@@ -151,13 +148,6 @@ function App() {
             setSchedulesData(CLASS_SCHEDULES);
         }
 
-        // 6. Fetch Suggestions (For Admin)
-        const suggestionsSnap = await getDocs(query(collection(db, "suggestions"), orderBy("timestamp", "desc")));
-        if (!suggestionsSnap.empty) {
-             const fetchedSuggestions = suggestionsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
-             setSuggestionsData(fetchedSuggestions);
-        }
-
       } catch (error) {
         console.error("Error connecting to Firebase:", error);
       } finally {
@@ -167,6 +157,21 @@ function App() {
 
     fetchAllData();
   }, []);
+
+  // --- 2. REAL-TIME LISTENER FOR SUGGESTIONS ---
+  // Ini agar pesan baru langsung muncul di Admin tanpa refresh halaman
+  useEffect(() => {
+    const q = query(collection(db, "suggestions"), orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedSuggestions = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as any));
+      setSuggestionsData(fetchedSuggestions);
+    }, (error) => {
+      console.error("Real-time suggestions error:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
 
   const resetView = () => {
     setShowAllTeachers(false);
@@ -245,7 +250,7 @@ function App() {
           setSchedulesData={setSchedulesData}
           galleryData={galleryData}
           setGalleryData={setGalleryData}
-          suggestionsData={suggestionsData} // Pass Suggestions to Admin
+          suggestionsData={suggestionsData} 
           setSuggestionsData={setSuggestionsData}
         />
       )}
