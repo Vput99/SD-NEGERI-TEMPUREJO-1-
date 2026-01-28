@@ -18,9 +18,31 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const TEACHERS: Teacher[] = [
-  { id: 1, name: "Nita Ekaningkarti Adji, S.Pd", role: "Kepala Sekolah", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=400&auto=format&fit=crop" },
-  { id: 3, name: "Rahmat Hidayat, S.Kom", role: "Guru TIK", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=400&auto=format&fit=crop" },
-  { id: 4, name: "Dewi Lestari, S.Sn", role: "Guru Kesenian", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=400&auto=format&fit=crop" },
+  { 
+    id: 1, 
+    name: "Nita Ekaningkarti Adji, S.Pd", 
+    role: "Kepala Sekolah", 
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=400&auto=format&fit=crop",
+    nip: "19860213 201409 2 002",
+    education: "S1 Pendidikan Guru Sekolah Dasar - Universitas Terbuka",
+    motto: "Mendidik dengan hati, mengabdi untuk negeri."
+  },
+  { 
+    id: 3, 
+    name: "Rahmat Hidayat, S.Kom", 
+    role: "Guru TIK & Operator", 
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=400&auto=format&fit=crop",
+    education: "S1 Teknik Informatika - Universitas Brawijaya",
+    motto: "Teknologi adalah alat, karakter adalah kunci."
+  },
+  { 
+    id: 4, 
+    name: "Dewi Lestari, S.Sn", 
+    role: "Guru Kesenian", 
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=400&auto=format&fit=crop",
+    education: "S1 Seni Tari - Institut Seni Indonesia",
+    motto: "Seni mengajarkan kita keindahan dalam keberagaman."
+  },
 ];
 
 export const NEWS: NewsItem[] = [

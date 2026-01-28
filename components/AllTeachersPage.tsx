@@ -9,6 +9,7 @@ interface AllTeachersPageProps {
 
 const AllTeachersPage: React.FC<AllTeachersPageProps> = ({ teachers, onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
 
   const filteredTeachers = teachers.filter(teacher => 
     teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +58,11 @@ const AllTeachersPage: React.FC<AllTeachersPageProps> = ({ teachers, onBack }) =
         {filteredTeachers.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {filteredTeachers.map((teacher) => (
-                <div key={teacher.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+                <div 
+                    key={teacher.id} 
+                    onClick={() => setSelectedTeacher(teacher)}
+                    className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col cursor-pointer"
+                >
                     <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
                         <img 
                             src={teacher.image} 
@@ -83,9 +88,8 @@ const AllTeachersPage: React.FC<AllTeachersPageProps> = ({ teachers, onBack }) =
                             {teacher.role}
                         </p>
                         
-                        {/* Social / Contact Mockup (Optional) */}
                         <div className="mt-auto pt-4 border-t border-slate-50 flex justify-center gap-4 opacity-60 hover:opacity-100 transition-opacity">
-                            <span className="text-xs text-slate-400 cursor-pointer hover:text-brand-primary">Lihat Profil Lengkap</span>
+                            <span className="text-xs text-slate-400 font-bold hover:text-brand-primary uppercase tracking-wider">Klik untuk Profil Lengkap</span>
                         </div>
                     </div>
                 </div>
@@ -97,6 +101,70 @@ const AllTeachersPage: React.FC<AllTeachersPageProps> = ({ teachers, onBack }) =
                 <h3 className="text-xl font-bold text-slate-700">Guru tidak ditemukan</h3>
                 <p className="text-slate-500">Coba kata kunci pencarian yang lain.</p>
             </div>
+        )}
+
+        {/* MODAL DETAIL GURU */}
+        {selectedTeacher && (
+             <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSelectedTeacher(null)}>
+                 <div className="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row relative" onClick={e => e.stopPropagation()}>
+                    
+                    {/* Close Button */}
+                    <button onClick={() => setSelectedTeacher(null)} className="absolute top-4 right-4 z-10 bg-white/50 hover:bg-white p-2 rounded-full transition-colors text-slate-600">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    {/* Image Side */}
+                    <div className="md:w-2/5 h-64 md:h-auto relative bg-slate-100">
+                         <img src={selectedTeacher.image} alt={selectedTeacher.name} className="w-full h-full object-cover" />
+                         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4 md:hidden">
+                             <h3 className="text-white font-bold text-xl">{selectedTeacher.name}</h3>
+                         </div>
+                    </div>
+
+                    {/* Info Side */}
+                    <div className="md:w-3/5 p-8 bg-white flex flex-col justify-center">
+                        <div className="hidden md:block mb-6">
+                            <span className="inline-block px-3 py-1 bg-brand-light text-brand-primary text-xs font-bold rounded-full mb-2 border border-brand-primary/20">
+                                {selectedTeacher.role}
+                            </span>
+                            <h2 className="font-display text-3xl font-bold text-slate-800 leading-tight">
+                                {selectedTeacher.name}
+                            </h2>
+                        </div>
+
+                        {/* ID CARD STYLE INFO */}
+                        <div className="space-y-4">
+                            {selectedTeacher.nip && (
+                                <div className="border-l-4 border-brand-primary pl-4 py-1">
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">NIP</p>
+                                    <p className="font-mono text-slate-700 font-medium">{selectedTeacher.nip}</p>
+                                </div>
+                            )}
+                            
+                            <div className="border-l-4 border-blue-400 pl-4 py-1">
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Jabatan</p>
+                                <p className="text-slate-700 font-medium">{selectedTeacher.role}</p>
+                            </div>
+
+                            {selectedTeacher.education && (
+                                <div className="border-l-4 border-yellow-400 pl-4 py-1">
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Pendidikan Terakhir</p>
+                                    <p className="text-slate-700 font-medium">{selectedTeacher.education}</p>
+                                </div>
+                            )}
+
+                             {selectedTeacher.motto && (
+                                <div className="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-100 italic text-slate-600 text-sm relative">
+                                    <span className="text-4xl text-slate-200 absolute top-0 left-2">“</span>
+                                    <p className="relative z-10 text-center">{selectedTeacher.motto}</p>
+                                    <span className="text-4xl text-slate-200 absolute bottom-[-10px] right-2">”</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                 </div>
+             </div>
         )}
 
       </div>

@@ -9,6 +9,10 @@ export interface Teacher {
   name: string;
   role: string;
   image: string;
+  // New Fields for Full Profile
+  nip?: string;
+  education?: string; // e.g. "S1 PGSD Universitas Negeri Malang"
+  motto?: string; // e.g. "Belajar sepanjang hayat"
 }
 
 export interface NewsItem {
