@@ -88,19 +88,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         reject(new Error("Gagal memproses gambar (Canvas error)"));
                         return;
                     }
+
+                    // FIX: Clear canvas untuk memastikan tidak ada artefak
+                    ctx.clearRect(0, 0, width, height);
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Compress to JPEG with reduced quality
-                    let quality = 0.7;
-                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    // FIX: Logika Penentuan Format Output
+                    // Jika file asli PNG/WEBP, gunakan 'image/webp' agar transparansi TETAP ADA.
+                    // Jika file asli JPG, gunakan 'image/jpeg' agar kompresi maksimal.
+                    let outputMime = 'image/jpeg';
+                    if (file.type === 'image/png' || file.type === 'image/webp') {
+                        outputMime = 'image/webp'; 
+                    }
+
+                    // Compress
+                    let quality = 0.8;
+                    let dataUrl = canvas.toDataURL(outputMime, quality);
 
                     // Loop to ensure size is under ~900KB (Safety margin for Firestore 1MB)
-                    // Base64 length ~ 1.33 * bytes
                     const MAX_BASE64_LENGTH = 1000000; 
 
                     while (dataUrl.length > MAX_BASE64_LENGTH && quality > 0.1) {
                         quality -= 0.1;
-                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        dataUrl = canvas.toDataURL(outputMime, quality);
                     }
 
                     if (dataUrl.length > MAX_BASE64_LENGTH) {
