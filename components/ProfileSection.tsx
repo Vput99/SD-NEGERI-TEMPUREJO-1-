@@ -123,7 +123,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ teachers, schoolName, o
                     </p>
                     <div>
                         <p className="font-bold text-slate-900 text-lg">{principal?.name}</p>
-                        <p className="text-sm text-slate-500">NIP. 19750101 200012 1 001</p>
+                        <p className="text-sm text-slate-500">NIP. 19860213 201409 2 002</p>
                     </div>
                  </div>
             </div>
