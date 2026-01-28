@@ -25,11 +25,10 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
   }, []);
 
   return (
-    // CHANGE: h-screen -> min-h-screen (prevents cut off)
-    // CHANGE: justify-center -> justify-start (manual top positioning)
-    // CHANGE: added pt-28 md:pt-40 (pushes content down below header)
-    // CHANGE: added pb-20 (bottom spacing)
-    <div id="beranda" className="relative w-full min-h-screen flex flex-col items-center justify-start pt-28 md:pt-40 pb-20 overflow-hidden">
+    // CHANGE: justify-center (agar konten di tengah vertikal)
+    // CHANGE: padding disesuaikan (pt-20 md:pt-28) agar pas di bawah header tapi tidak terlalu turun
+    // CHANGE: pb-32 (memberi ruang untuk ombak di bawah)
+    <div id="beranda" className="relative w-full min-h-screen flex flex-col items-center justify-center pt-20 md:pt-28 pb-28 md:pb-32 overflow-hidden">
       {/* Background Slideshow */}
       {HERO_IMAGES.map((img, index) => (
         <div 
@@ -54,15 +53,14 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
       </div>
 
       {/* Content */}
-      {/* Removed padding from here since parent container handles positioning now */}
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto text-white flex flex-col items-center">
         
-        {/* Logos Display (Static, Large, Blended with Glass Effect) */}
-        <div className="flex items-center justify-center gap-4 md:gap-8 mb-6 md:mb-8 animate-in fade-in zoom-in duration-1000">
+        {/* Logos Display - Compact Version */}
+        {/* UPDATE: Margin bawah dikurangi (mb-4 md:mb-6) agar tidak terlalu boros tempat */}
+        <div className="flex items-center justify-center gap-3 md:gap-6 mb-4 md:mb-6 animate-in fade-in zoom-in duration-1000">
             {/* Logo Daerah (Kiri) */}
             {schoolProfile.logoDaerah && (
-                // UPDATE: Reduced sizes for md (laptop) to save vertical space
-                <div className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 bg-white/10 backdrop-blur-md rounded-full p-3 md:p-3 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
+                <div className="w-14 h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 bg-white/10 backdrop-blur-md rounded-full p-2 md:p-3 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
                     <img 
                         src={schoolProfile.logoDaerah} 
                         alt="Logo Daerah" 
@@ -73,8 +71,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
             
             {/* Logo Sekolah (Tengah - Besar) */}
             {schoolProfile.logo && (
-                // UPDATE: Reduced sizes for md (laptop)
-                <div className="w-24 h-24 md:w-32 md:h-32 lg:w-48 lg:h-48 bg-white/20 backdrop-blur-xl rounded-full p-4 md:p-5 border-2 border-white/30 shadow-2xl shadow-brand-primary/20 transform hover:scale-105 transition-all duration-500 relative z-10 hover:bg-white/25">
+                <div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white/20 backdrop-blur-xl rounded-full p-3 md:p-5 border-2 border-white/30 shadow-2xl shadow-brand-primary/20 transform hover:scale-105 transition-all duration-500 relative z-10 hover:bg-white/25">
                      <img 
                         src={schoolProfile.logo} 
                         alt="Logo Sekolah" 
@@ -85,8 +82,7 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
 
             {/* Logo Mapan (Kanan) */}
             {schoolProfile.logoMapan && (
-                // UPDATE: Reduced sizes for md (laptop)
-                <div className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 bg-white/10 backdrop-blur-md rounded-full p-3 md:p-3 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
+                <div className="w-14 h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 bg-white/10 backdrop-blur-md rounded-full p-2 md:p-3 border border-white/20 shadow-2xl transform hover:scale-110 transition-all duration-500 hover:bg-white/20">
                     <img 
                         src={schoolProfile.logoMapan} 
                         alt="Logo Mapan" 
@@ -96,30 +92,33 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
             )}
         </div>
 
-        <div className="mb-4 md:mb-6 inline-flex items-center gap-2 glass px-4 py-1.5 md:px-6 md:py-2 rounded-full animate-float shadow-lg border-brand-accent/30">
+        {/* Badge - Margin dikurangi */}
+        <div className="mb-3 md:mb-5 inline-flex items-center gap-2 glass px-3 py-1 md:px-5 md:py-1.5 rounded-full animate-float shadow-lg border-brand-accent/30">
             <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-brand-accent animate-pulse"></span>
-            <span className="text-brand-light font-bold text-xs md:text-sm uppercase tracking-wider">
+            <span className="text-brand-light font-bold text-[10px] md:text-xs uppercase tracking-wider">
                 Sekolah Adiwiyata
             </span>
         </div>
         
-        {/* Title - Adjusted font sizes for better responsiveness on laptops */}
-        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 drop-shadow-xl leading-tight">
+        {/* Title - Ukuran font disesuaikan agar tidak pecah baris terlalu banyak */}
+        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-4 drop-shadow-xl leading-tight">
           Mewujudkan Generasi <br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-yellow-200">
             Cerdas & Berbudaya
           </span>
         </h1>
         
-        <p className="font-body text-sm sm:text-base md:text-lg lg:text-2xl mb-8 md:mb-10 font-light drop-shadow-md text-slate-100 max-w-3xl mx-auto px-2">
+        {/* Description - Margin bawah dikurangi */}
+        <p className="font-body text-sm sm:text-base md:text-lg mb-6 md:mb-8 font-light drop-shadow-md text-slate-100 max-w-2xl mx-auto px-4 leading-relaxed">
           {schoolProfile.name} hadir dengan konsep pendidikan modern yang menyatu dengan alam.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-xs sm:max-w-none mx-auto pb-4">
+        {/* Buttons - Padding tombol sedikit diperkecil untuk tampilan laptop */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full max-w-xs sm:max-w-none mx-auto pb-4">
           <a 
             href="#profil" 
             onClick={(e) => scrollToSection(e, '#profil')}
-            className="w-full sm:w-auto group relative px-8 py-3 md:py-4 rounded-full bg-brand-accent text-brand-dark font-bold text-base md:text-lg shadow-[0_0_20px_rgba(132,204,22,0.5)] hover:shadow-[0_0_30px_rgba(132,204,22,0.8)] transition-all duration-300 overflow-hidden"
+            className="w-full sm:w-auto group relative px-6 py-2.5 md:px-8 md:py-3 rounded-full bg-brand-accent text-brand-dark font-bold text-sm md:text-base shadow-[0_0_20px_rgba(132,204,22,0.5)] hover:shadow-[0_0_30px_rgba(132,204,22,0.8)] transition-all duration-300 overflow-hidden"
           >
             <span className="relative z-10">Jelajahi Profil</span>
             <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
@@ -128,19 +127,19 @@ const Hero: React.FC<HeroProps> = ({ schoolProfile }) => {
           <a 
             href="#jadwal" 
             onClick={(e) => scrollToSection(e, '#jadwal')}
-            className="w-full sm:w-auto group px-8 py-3 md:py-4 rounded-full glass text-white font-bold text-base md:text-lg hover:bg-white/20 transition-all duration-300 border border-white/30 flex items-center gap-2 justify-center"
+            className="w-full sm:w-auto group px-6 py-2.5 md:px-8 md:py-3 rounded-full glass text-white font-bold text-sm md:text-base hover:bg-white/20 transition-all duration-300 border border-white/30 flex items-center gap-2 justify-center"
           >
             <span>Lihat Jadwal</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </a>
         </div>
       </div>
 
-      {/* Modern Curvy Divider */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        <svg viewBox="0 0 1440 320" className="w-full h-auto block drop-shadow-sm">
+      {/* Modern Curvy Divider - Ensure it stays at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+        <svg viewBox="0 0 1440 320" className="w-full h-auto block drop-shadow-sm max-h-[15vh] md:max-h-[20vh] object-cover object-bottom">
           <path fill="#ECFDF5" fillOpacity="1" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,170.7C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
         </svg>
       </div>
