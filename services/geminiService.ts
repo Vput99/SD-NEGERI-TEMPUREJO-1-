@@ -95,7 +95,16 @@ export const generateNewsContent = async (title: string, imageBase64: string) =>
     });
 
     if (response.text) {
-        return JSON.parse(response.text);
+        try {
+            return JSON.parse(response.text);
+        } catch (jsonError) {
+             console.error("JSON Parse Error from AI:", jsonError);
+             // Fallback if not valid JSON
+             return {
+                 summary: "Gagal memproses ringkasan otomatis.",
+                 content: response.text
+             };
+        }
     }
     throw new Error("Gagal mendapatkan respons dari AI.");
   } catch (error) {

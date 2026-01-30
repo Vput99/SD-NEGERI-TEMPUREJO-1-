@@ -132,7 +132,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             setCompressing(true);
             try {
                 const compressedBase64 = await compressImage(file);
-                setFunction({ ...currentData, [field]: compressedBase64 });
+                // Ensure we create a clean object update
+                setFunction((prev: any) => ({ ...prev, [field]: compressedBase64 }));
             } catch (err: any) {
                 alert(err.message || "Gagal mengompres gambar.");
             } finally {
@@ -168,18 +169,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         e.preventDefault();
         if (!editingNews?.title || !editingNews?.date) return;
         setLoading(true);
+        
+        // Explicitly construct payload to prevent circular references
+        const newsPayload = {
+            title: editingNews.title,
+            date: editingNews.date,
+            category: editingNews.category || 'Pengumuman',
+            summary: editingNews.summary || '',
+            content: editingNews.content || '',
+            image: editingNews.image || ''
+        };
+
         try {
             if (editingNews.id) {
                 const newsRef = doc(db, "news", String(editingNews.id));
-                const { id, ...data } = editingNews;
-                await updateDoc(newsRef, data);
-                setNewsData(prev => prev.map(item => item.id === editingNews.id ? editingNews as NewsItem : item));
+                await updateDoc(newsRef, newsPayload);
+                setNewsData(prev => prev.map(item => item.id === editingNews.id ? { ...newsPayload, id: editingNews.id } as NewsItem : item));
             } else {
-                const newDoc = await addDoc(collection(db, "news"), editingNews);
-                setNewsData(prev => [{ ...editingNews, id: newDoc.id } as NewsItem, ...prev]);
+                const newDoc = await addDoc(collection(db, "news"), newsPayload);
+                setNewsData(prev => [{ ...newsPayload, id: newDoc.id } as NewsItem, ...prev]);
             }
             setEditingNews(null);
         } catch (error: any) {
+            console.error("Save News Error:", error);
             alert(`Gagal: ${error.message}`);
         } finally {
             setLoading(false);
@@ -203,18 +215,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         e.preventDefault();
         if (!editingTeacher?.name) return;
         setLoading(true);
+
+        // Explicitly construct payload
+        const teacherPayload = {
+            name: editingTeacher.name,
+            role: editingTeacher.role,
+            image: editingTeacher.image || '',
+            nip: editingTeacher.nip || '',
+            education: editingTeacher.education || '',
+            motto: editingTeacher.motto || ''
+        };
+
         try {
             if (editingTeacher.id) {
                 const ref = doc(db, "teachers", String(editingTeacher.id));
-                const { id, ...data } = editingTeacher;
-                await updateDoc(ref, data);
-                setTeachersData(prev => prev.map(item => item.id === editingTeacher.id ? editingTeacher as Teacher : item));
+                await updateDoc(ref, teacherPayload);
+                setTeachersData(prev => prev.map(item => item.id === editingTeacher.id ? { ...teacherPayload, id: editingTeacher.id } as Teacher : item));
             } else {
-                const newDoc = await addDoc(collection(db, "teachers"), editingTeacher);
-                setTeachersData(prev => [...prev, { ...editingTeacher, id: newDoc.id } as Teacher]);
+                const newDoc = await addDoc(collection(db, "teachers"), teacherPayload);
+                setTeachersData(prev => [...prev, { ...teacherPayload, id: newDoc.id } as Teacher]);
             }
             setEditingTeacher(null);
         } catch (error: any) {
+            console.error("Save Teacher Error:", error);
             alert(`Gagal: ${error.message}`);
         } finally {
             setLoading(false);
@@ -235,18 +258,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         e.preventDefault();
         if (!editingGallery?.src) return;
         setLoading(true);
+
+        // Explicitly construct payload
+        const galleryPayload = {
+            caption: editingGallery.caption,
+            category: editingGallery.category,
+            src: editingGallery.src
+        };
+
         try {
              if (editingGallery.id) {
                 const ref = doc(db, "gallery", String(editingGallery.id));
-                const { id, ...data } = editingGallery;
-                await updateDoc(ref, data);
-                setGalleryData(prev => prev.map(item => item.id === editingGallery.id ? editingGallery as GalleryImage : item));
+                await updateDoc(ref, galleryPayload);
+                setGalleryData(prev => prev.map(item => item.id === editingGallery.id ? { ...galleryPayload, id: editingGallery.id } as GalleryImage : item));
             } else {
-                const newDoc = await addDoc(collection(db, "gallery"), editingGallery);
-                setGalleryData(prev => [...prev, { ...editingGallery, id: newDoc.id } as GalleryImage]);
+                const newDoc = await addDoc(collection(db, "gallery"), galleryPayload);
+                setGalleryData(prev => [...prev, { ...galleryPayload, id: newDoc.id } as GalleryImage]);
             }
             setEditingGallery(null);
         } catch (error: any) {
+             console.error("Save Gallery Error:", error);
              alert(`Gagal: ${error.message}`);
         } finally {
             setLoading(false);
@@ -265,10 +296,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     const handleSaveProfile = async () => {
         setLoading(true);
+
+        // Explicitly construct payload
+        const profilePayload = {
+            name: schoolProfile.name,
+            address: schoolProfile.address,
+            phone: schoolProfile.phone || '',
+            email: schoolProfile.email,
+            logo: schoolProfile.logo || '',
+            logoDaerah: schoolProfile.logoDaerah || '',
+            logoMapan: schoolProfile.logoMapan || '',
+            socialMedia: {
+                facebook: schoolProfile.socialMedia.facebook || '',
+                instagram: schoolProfile.socialMedia.instagram || '',
+                youtube: schoolProfile.socialMedia.youtube || '',
+                tiktok: schoolProfile.socialMedia.tiktok || ''
+            }
+        };
+
         try {
-            await setDoc(doc(db, "school_profile", "main"), schoolProfile, { merge: true });
+            await setDoc(doc(db, "school_profile", "main"), profilePayload, { merge: true });
             alert("Profil berhasil disimpan!");
         } catch (error: any) {
+            console.error("Save Profile Error:", error);
             alert("Gagal menyimpan profil.");
         } finally {
             setLoading(false);
@@ -671,8 +721,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         const handleSaveScheduleToDB = async () => {
                                             setLoading(true);
                                             try {
-                                                await setDoc(doc(db, "schedules", currentSchedule.className), currentSchedule);
-                                                alert(`Jadwal ${currentSchedule.className} berhasil disimpan!`);
+                                                // Create a clean object for saving
+                                                const schedulePayload = {
+                                                    className: currentSchedule.className,
+                                                    days: currentSchedule.days.map(d => ({
+                                                        dayName: d.dayName,
+                                                        schedule: d.schedule.map(s => ({
+                                                            time: s.time,
+                                                            subject: s.subject
+                                                        }))
+                                                    }))
+                                                };
+                                                await setDoc(doc(db, "schedules", schedulePayload.className), schedulePayload);
+                                                alert(`Jadwal ${schedulePayload.className} berhasil disimpan!`);
                                             } catch (error) {
                                                 console.error(error);
                                                 alert("Gagal menyimpan jadwal.");
