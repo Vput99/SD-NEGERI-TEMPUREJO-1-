@@ -584,9 +584,19 @@ const ExamDetailPage: React.FC<ExamDetailPageProps> = ({ onBack }) => {
                                         <h3 className="font-bold text-lg text-slate-800">Bank Soal Latihan</h3>
                                         <p className="text-xs text-slate-500">Model AKM (Asesmen Kompetensi Minimum) & Materi Esensial</p>
                                      </div>
-                                     <button className="text-sm font-bold text-blue-600 border border-blue-200 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors">
-                                        📥 Download PDF Soal
-                                     </button>
+                                     <div className="flex flex-col sm:flex-row gap-3">
+                                         <a 
+                                            href="https://tryout-tka.vercel.app/" 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm font-bold text-white bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 justify-center"
+                                         >
+                                            <span>🚀</span> Latihan TKA Online
+                                         </a>
+                                         <button className="text-sm font-bold text-blue-600 border border-blue-200 px-4 py-2 rounded-full hover:bg-blue-50 transition-colors">
+                                            📥 Download PDF Soal
+                                         </button>
+                                     </div>
                                 </div>
                                 
                                 {activeSubject.examples?.map((ex, idx) => (
