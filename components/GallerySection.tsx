@@ -44,9 +44,11 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
     }
   };
 
-  // Helper to get YouTube ID
+  // Helper to get YouTube ID (Updated to support Shorts)
   const getYouTubeId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    if (!url) return null;
+    // Regex now includes 'shorts/'
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   };
@@ -128,6 +130,7 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
             {filteredImages.length > 0 ? filteredImages.map((image) => {
                 const isVideo = image.type === 'video';
                 const youtubeId = isVideo ? getYouTubeId(image.src) : null;
+                // Jika YouTube ID ada, gunakan thumbnail YT. Jika tidak, gunakan src (jika src bukan URL youtube, asumsi thumbnail manual atau placeholder)
                 const thumbnailUrl = isVideo && youtubeId 
                     ? `https://img.youtube.com/vi/${youtubeId}/0.jpg` 
                     : image.src;
@@ -146,6 +149,10 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
                             alt={image.caption} 
                             className={`w-full h-full object-cover transform transition duration-700 group-hover:scale-110 ${isVideo ? 'opacity-80' : ''}`}
                             loading="lazy"
+                            onError={(e) => {
+                                // Fallback jika thumbnail YT gagal atau src bukan gambar valid
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Video+Preview';
+                            }}
                         />
                         
                         {/* Play Icon for Videos */}
@@ -208,10 +215,10 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
                                 allowFullScreen
                              ></iframe>
                          ) : (
-                             // Fallback for direct MP4 links (less common given storage limits, but good to have)
+                             // Fallback for direct MP4 links
                              <video controls autoPlay className="w-full h-full">
                                  <source src={selectedImage.src} type="video/mp4" />
-                                 Browser Anda tidak mendukung tag video.
+                                 Maaf, video tidak dapat diputar. Pastikan link YouTube valid.
                              </video>
                          )}
                     </div>
