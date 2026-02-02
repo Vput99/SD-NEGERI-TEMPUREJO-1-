@@ -119,16 +119,17 @@ const Header: React.FC<HeaderProps> = ({ schoolProfile, onResetView }) => {
               {/* --- RIGHT: CTA & MOBILE TOGGLE --- */}
               <div className="flex items-center gap-3 relative z-50">
                   
-                  {/* PPDB Button (Desktop) */}
+                  {/* PPDB Button (Desktop) - EXTERNAL LINK */}
                   <a 
-                      href="#ppdb" 
-                      onClick={(e) => handleNavClick(e, '#ppdb')}
+                      href="https://spmb.sdntempurejo1kotakediri.my.id/#register" 
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={`hidden md:flex px-5 py-2.5 rounded-full font-bold text-xs shadow-lg transition-all transform hover:scale-105 hover:shadow-xl items-center gap-2 border
                       ${isScrolled 
                           ? 'bg-gradient-to-r from-brand-primary to-emerald-600 text-white border-transparent shadow-brand-primary/20' 
                           : 'bg-white/10 backdrop-blur-md text-white border-white/30 hover:bg-white hover:text-brand-dark'}`}
                   >
-                      <span>PPDB Online</span>
+                      <span>Daftar SPMB</span>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
@@ -185,8 +186,12 @@ const Header: React.FC<HeaderProps> = ({ schoolProfile, onResetView }) => {
                   {NAV_ITEMS.map((item, idx) => (
                       <a 
                           key={item.label}
-                          href={item.href}
-                          onClick={(e) => handleNavClick(e, item.href)}
+                          href={item.label === 'PPDB' ? "https://spmb.sdntempurejo1kotakediri.my.id/#register" : item.href}
+                          target={item.label === 'PPDB' ? "_blank" : "_self"}
+                          onClick={(e) => {
+                             if(item.label !== 'PPDB') handleNavClick(e, item.href);
+                             else setIsMobileMenuOpen(false);
+                          }}
                           className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 border border-transparent
                               ${item.label === 'PPDB' 
                                   ? 'bg-brand-light text-brand-primary font-bold border-brand-primary/20' 

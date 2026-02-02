@@ -15,23 +15,31 @@ const PPDBSection: React.FC = () => {
             </div>
 
             <div className="relative z-10 px-8 py-20 md:px-20 text-center">
-                <span className="inline-block px-4 py-1 rounded-full border border-white/20 bg-white/10 text-brand-accent font-bold text-sm mb-6 backdrop-blur-sm">
-                    Penerimaan Peserta Didik Baru
+                <span className="inline-block px-4 py-1 rounded-full border border-white/20 bg-white/10 text-brand-accent font-bold text-sm mb-6 backdrop-blur-sm animate-pulse">
+                    🟢 Penerimaan Peserta Didik Baru
                 </span>
                 
                 <h2 className="font-display text-5xl md:text-7xl font-black text-white mb-6 tracking-tight">
-                    OPENING SOON <br/>
+                    PENDAFTARAN DIBUKA <br/>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-brand-yellow">2025 / 2026</span>
                 </h2>
                 
                 <p className="text-slate-300 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-                    Siapkan masa depan buah hati Anda bersama kami. Pendidikan berkarakter, lingkungan asri, dan teknologi terkini.
+                    Siapkan masa depan buah hati Anda bersama kami. Pendidikan berkarakter, lingkungan asri, dan teknologi terkini. Segera daftar sebelum kuota terpenuhi.
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                    <button disabled className="px-8 py-4 bg-white text-brand-dark rounded-full font-bold text-lg hover:bg-slate-100 transition-colors shadow-lg disabled:opacity-80 disabled:cursor-not-allowed">
-                        ⏳ Pendaftaran Belum Dibuka
-                    </button>
+                    <a 
+                        href="https://spmb.sdntempurejo1kotakediri.my.id/#register"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-8 py-4 bg-white text-brand-dark rounded-full font-bold text-lg hover:bg-slate-100 transition-transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 group"
+                    >
+                        <span>📝 Daftar Sekarang</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
                     <a href="#kontak" className="px-8 py-4 bg-transparent border border-white/30 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-colors">
                         Hubungi Kami
                     </a>
