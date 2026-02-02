@@ -22,7 +22,7 @@ interface AdminDashboardProps {
     setSuggestionsData: React.Dispatch<React.SetStateAction<Suggestion[]>>; 
 }
 
-type TabType = 'dashboard' | 'news' | 'teachers' | 'schedules' | 'gallery' | 'identity' | 'suggestions';
+type TabType = 'dashboard' | 'news' | 'teachers' | 'schedules' | 'gallery' | 'identity' | 'suggestions' | 'spmb';
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
     isOpen, onClose, 
@@ -409,6 +409,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <NavButton tab="schedules" label="Jadwal" icon="📅" />
                             <NavButton tab="teachers" label="Guru" icon="👨‍🏫" />
                             <NavButton tab="gallery" label="Galeri" icon="📸" />
+                            <NavButton tab="spmb" label="Kelola SPMB" icon="🎓" />
                         </nav>
                     )}
 
@@ -1061,6 +1062,36 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                             {/* --- TAB: SPMB --- */}
+                             {activeTab === 'spmb' && (
+                                <div className="animate-in fade-in duration-500">
+                                    <h2 className="text-2xl font-bold mb-6">Kelola SPMB (PPDB Online)</h2>
+                                    <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center max-w-2xl mx-auto">
+                                        <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                                            🎓
+                                        </div>
+                                        <h3 className="text-xl font-bold text-slate-800 mb-3">Sistem Penerimaan Murid Baru</h3>
+                                        <p className="text-slate-500 mb-8 leading-relaxed">
+                                            Manajemen pendaftaran siswa baru (PPDB), seleksi, dan pengumuman dilakukan melalui sistem SPMB terpisah yang terintegrasi.
+                                        </p>
+                                        <a 
+                                            href="https://spmb.sdntempurejo1kotakediri.my.id/#admin" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-3 bg-brand-primary text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-brand-dark hover:scale-105 transition-all"
+                                        >
+                                            <span>Buka Dashboard SPMB</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                        </a>
+                                        <p className="mt-4 text-xs text-slate-400">
+                                            *Dashboard akan terbuka di tab baru
+                                        </p>
                                     </div>
                                 </div>
                             )}
