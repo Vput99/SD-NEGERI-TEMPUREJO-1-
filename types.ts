@@ -50,6 +50,7 @@ export interface GalleryImage {
   src: string;
   caption: string;
   category: 'Ekstrakurikuler' | 'Akademik' | 'Fasilitas';
+  type?: 'image' | 'video'; // New field to distinguish between photo and video
 }
 
 export interface SchoolProfile {

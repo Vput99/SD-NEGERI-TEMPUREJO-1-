@@ -44,6 +44,13 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
     }
   };
 
+  // Helper to get YouTube ID
+  const getYouTubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
   // Handle locking body scroll and Escape key for Lightbox
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -118,34 +125,52 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
             className="flex gap-4 overflow-x-auto pb-6 px-1 snap-x snap-mandatory no-scrollbar"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-            {filteredImages.length > 0 ? filteredImages.map((image) => (
-                <div 
-                    key={image.id} 
-                    className="snap-start shrink-0 w-[80vw] sm:w-[320px] md:w-[400px] aspect-[4/3] relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
-                    onClick={() => setSelectedImage(image)}
-                    onKeyDown={(e) => e.key === 'Enter' && setSelectedImage(image)}
-                    tabIndex={0}
-                    role="button"
-                >
-                    <img 
-                        src={image.src} 
-                        alt={image.caption} 
-                        className="w-full h-full object-cover transform transition duration-700 group-hover:scale-110"
-                        loading="lazy"
-                    />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                        <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                            <span className="inline-block px-2 py-1 bg-brand-accent/90 text-brand-dark text-[10px] font-bold rounded uppercase mb-2">
-                                {image.category}
-                            </span>
-                            <p className="font-bold text-white text-lg leading-tight">{image.caption}</p>
+            {filteredImages.length > 0 ? filteredImages.map((image) => {
+                const isVideo = image.type === 'video';
+                const youtubeId = isVideo ? getYouTubeId(image.src) : null;
+                const thumbnailUrl = isVideo && youtubeId 
+                    ? `https://img.youtube.com/vi/${youtubeId}/0.jpg` 
+                    : image.src;
+
+                return (
+                    <div 
+                        key={image.id} 
+                        className="snap-start shrink-0 w-[80vw] sm:w-[320px] md:w-[400px] aspect-[4/3] relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 bg-slate-200"
+                        onClick={() => setSelectedImage(image)}
+                        onKeyDown={(e) => e.key === 'Enter' && setSelectedImage(image)}
+                        tabIndex={0}
+                        role="button"
+                    >
+                        <img 
+                            src={thumbnailUrl} 
+                            alt={image.caption} 
+                            className={`w-full h-full object-cover transform transition duration-700 group-hover:scale-110 ${isVideo ? 'opacity-80' : ''}`}
+                            loading="lazy"
+                        />
+                        
+                        {/* Play Icon for Videos */}
+                        {isVideo && (
+                            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                <div className="w-16 h-16 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/60 shadow-lg group-hover:scale-110 transition-transform">
+                                    <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                            <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                <span className={`inline-block px-2 py-1 text-[10px] font-bold rounded uppercase mb-2 ${isVideo ? 'bg-red-500 text-white' : 'bg-brand-accent/90 text-brand-dark'}`}>
+                                    {isVideo ? 'VIDEO' : image.category}
+                                </span>
+                                <p className="font-bold text-white text-lg leading-tight">{image.caption}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )) : (
+                );
+            }) : (
                 <div className="w-full py-10 text-center text-slate-400 italic">
-                    Tidak ada foto untuk kategori ini.
+                    Tidak ada galeri untuk kategori ini.
                 </div>
             )}
         </div>
@@ -171,11 +196,32 @@ const GallerySection: React.FC<GallerySectionProps> = ({ galleryItems }) => {
                     </svg>
                 </button>
                 
-                <img 
-                    src={selectedImage.src} 
-                    alt={selectedImage.caption} 
-                    className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10"
-                />
+                {selectedImage.type === 'video' ? (
+                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10">
+                         {getYouTubeId(selectedImage.src) ? (
+                             <iframe 
+                                className="w-full h-full"
+                                src={`https://www.youtube.com/embed/${getYouTubeId(selectedImage.src)}?autoplay=1`}
+                                title={selectedImage.caption}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                             ></iframe>
+                         ) : (
+                             // Fallback for direct MP4 links (less common given storage limits, but good to have)
+                             <video controls autoPlay className="w-full h-full">
+                                 <source src={selectedImage.src} type="video/mp4" />
+                                 Browser Anda tidak mendukung tag video.
+                             </video>
+                         )}
+                    </div>
+                ) : (
+                    <img 
+                        src={selectedImage.src} 
+                        alt={selectedImage.caption} 
+                        className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10"
+                    />
+                )}
                 
                 <div className="mt-6 text-center">
                     <h3 className="text-white text-xl md:text-2xl font-display font-bold mb-2">

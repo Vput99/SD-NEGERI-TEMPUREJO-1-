@@ -160,12 +160,14 @@ export const CLASS_SCHEDULES: ClassSchedule[] = [
 ];
 
 export const GALLERY: GalleryImage[] = [
-  { id: 1, category: 'Fasilitas', src: "https://picsum.photos/id/201/800/600", caption: "Lab Komputer Modern" },
-  { id: 2, category: 'Akademik', src: "https://picsum.photos/id/301/800/600", caption: "Kegiatan Belajar Mengajar" },
-  { id: 3, category: 'Ekstrakurikuler', src: "https://picsum.photos/id/401/800/600", caption: "Latihan Pramuka" },
-  { id: 4, category: 'Ekstrakurikuler', src: "https://picsum.photos/id/501/800/600", caption: "Pertandingan Futsal" },
-  { id: 5, category: 'Fasilitas', src: "https://picsum.photos/id/600/800/600", caption: "Perpustakaan Lengkap" },
-  { id: 6, category: 'Akademik', src: "https://picsum.photos/id/701/800/600", caption: "Praktikum Sains" },
+  { id: 1, category: 'Fasilitas', src: "https://picsum.photos/id/201/800/600", caption: "Lab Komputer Modern", type: 'image' },
+  { id: 2, category: 'Akademik', src: "https://picsum.photos/id/301/800/600", caption: "Kegiatan Belajar Mengajar", type: 'image' },
+  { id: 3, category: 'Ekstrakurikuler', src: "https://picsum.photos/id/401/800/600", caption: "Latihan Pramuka", type: 'image' },
+  { id: 4, category: 'Ekstrakurikuler', src: "https://picsum.photos/id/501/800/600", caption: "Pertandingan Futsal", type: 'image' },
+  { id: 5, category: 'Fasilitas', src: "https://picsum.photos/id/600/800/600", caption: "Perpustakaan Lengkap", type: 'image' },
+  { id: 6, category: 'Akademik', src: "https://picsum.photos/id/701/800/600", caption: "Praktikum Sains", type: 'image' },
+  // Video Example
+  { id: 7, category: 'Ekstrakurikuler', src: "https://www.youtube.com/watch?v=LXb3EKWsInQ", caption: "Dokumentasi Wisuda 2024", type: 'video' },
 ];
 
 export const SYSTEM_CONTEXT = `
