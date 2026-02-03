@@ -30,7 +30,7 @@ const PPDBSection: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                     <a 
-                        href="https://spmb.sdntempurejo1kotakediri.my.id/#register"
+                        href="https://spmb.sdntempurejo1kotakediri.my.id/#home"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-8 py-4 bg-white text-brand-dark rounded-full font-bold text-lg hover:bg-slate-100 transition-transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 group"

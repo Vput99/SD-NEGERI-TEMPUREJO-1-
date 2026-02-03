@@ -121,7 +121,7 @@ const Header: React.FC<HeaderProps> = ({ schoolProfile, onResetView }) => {
                   
                   {/* PPDB Button (Desktop) - EXTERNAL LINK */}
                   <a 
-                      href="https://spmb.sdntempurejo1kotakediri.my.id/#register" 
+                      href="https://spmb.sdntempurejo1kotakediri.my.id/#home" 
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`hidden md:flex px-5 py-2.5 rounded-full font-bold text-xs shadow-lg transition-all transform hover:scale-105 hover:shadow-xl items-center gap-2 border
@@ -186,7 +186,7 @@ const Header: React.FC<HeaderProps> = ({ schoolProfile, onResetView }) => {
                   {NAV_ITEMS.map((item, idx) => (
                       <a 
                           key={item.label}
-                          href={item.label === 'PPDB' ? "https://spmb.sdntempurejo1kotakediri.my.id/#register" : item.href}
+                          href={item.label === 'PPDB' ? "https://spmb.sdntempurejo1kotakediri.my.id/#home" : item.href}
                           target={item.label === 'PPDB' ? "_blank" : "_self"}
                           onClick={(e) => {
                              if(item.label !== 'PPDB') handleNavClick(e, item.href);
